@@ -11,8 +11,14 @@ const NavBar = () => {
             <li>contact</li>
         </ul>
         <div className='md:hidden'>
-        <RxHamburgerMenu />
+        <RxHamburgerMenu className='text-3xl'/>
         </div>
+        {/* Adding Menu for Mobile view */}
+        <ul className='md:hidden absolute top-20 left-0 w-[50vw] h-[90vh] bg-slate-800 text-white'>
+            <li>Home</li>
+            <li>about</li>
+            <li>contact</li>
+        </ul>
         <ul className='flex gap-3 items-center md:flex'>
            <li><a href="#">Login</a></li>
            <li><a href="#">Sign Up</a></li>
