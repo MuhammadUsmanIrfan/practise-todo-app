@@ -23,7 +23,6 @@ const NavBar = () => {
         .then((data) => {
 
           setUserDetails(data);
-          
         })
         .catch((err) => {
           console.error("Validation error:", err);
@@ -82,7 +81,8 @@ const NavBar = () => {
             </>
           )}
           <div className="w-14 h-14 rounded-full bg-slate-400">
-            <img src="placeholder.jpg" className="h-full w-full rounded-full" alt="User Avatar" />
+            {(userDetails?.data?.profile_image) ?<img src={`http://localhost:3000/${userDetails?.data?.profile_image}`} className="h-full w-full rounded-full" alt="User Avatar" /> : <img src="placeholder.jpg" className="h-full w-full rounded-full" alt="User Avatar" />}
+            
           </div>
         </ul>
       </nav>

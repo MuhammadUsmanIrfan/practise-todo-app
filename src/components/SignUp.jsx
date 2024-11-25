@@ -7,6 +7,7 @@ const SignUp = () => {
   const[checkPassword, setCheckPassword]=useState(false)
   const[checkUser, setCheckUser]=useState(false)
 
+
   const navigate = useNavigate();
 
 
@@ -23,12 +24,20 @@ const SignUp = () => {
     {
       setCheckPassword(!checkPassword)
     }else{
+
+      const formData = new FormData();
+        
+      
+      formData.append('first_name', data.first_name);
+      formData.append('last_name', data.last_name);
+      formData.append('email', data.email);
+      formData.append('file', data.file[0]);  
+      formData.append('password', data.password);
+      formData.append('phone_num', data.phone_num);
+      
       const userSubmitData = await fetch("http://localhost:3000/signup",{
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json', 
-        },
-        body: JSON.stringify(data),
+        body:formData,
       })
       const userRegisterResponse = await userSubmitData.json()
 
@@ -49,7 +58,7 @@ const SignUp = () => {
     <>
     <div className='container px-4 py-4 md:py-12 md:px-12  min-h-[calc(100vh-4.5rem)] w-[100%] bg-slate-600'>
     <h1 className='text-center text-2xl font-bold text-white'>SignUp Page</h1>
-      <form className="max-w-sm mx-auto" onSubmit={handleSubmit(handleForm)} method='POST'>
+      <form className="max-w-sm mx-auto" onSubmit={handleSubmit(handleForm)} method='POST' enctype="multipart/form-data">
 
         {checkUser && <h2 className='text-red-900 text-center mt-4 font-bold'>***This user is already registerd***</h2>}
 
@@ -69,7 +78,7 @@ const SignUp = () => {
 
         <div className="mb-5">
           <label htmlFor="file" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Profile Image</label>
-          <input type="file" id="file" name='file' {...register("file")} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" />
+          <input type="file" id="file"name='file' {...register("file")}  className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" />
         </div>
 
         <div className="mb-5">
