@@ -6,13 +6,19 @@ import { useNavigate } from 'react-router-dom'
 const Home = () => {
   
   const [userDetails, setUserDetails] = useState({})
+  const [token, setToken] = useState(localStorage.getItem("auth_token"))
   const [loading, setLoading] = useState(true)
+  const [sendEmailState, setSendEmailState] = useState(false)
+  const [userSmsOtp, setUserSmsOtp] = useState("")
+  const [sendSmsState, setSendSmsState] = useState(false)
+  const [verfiySmsState, setVerfiySmsState] = useState(false)
+  const [verfiySmsResponse, setVerfiySmsResponse] = useState("")
+
   const navigate = useNavigate()
 
   useEffect(()=>{
-    
-    const token = localStorage.getItem("auth_token")
 
+      
     if(token)
     {
       const response = fetch("http://localhost:3000/validate", {
@@ -22,8 +28,14 @@ const Home = () => {
             'Authorization': `Bearer ${token}`, 
         },
     }).then((response)=> response.json()).then((data)=>{
-      setUserDetails(data)
-      setLoading(false)
+      if(data.status == 200)
+      {
+        setUserDetails(data)
+        console.log(String(userDetails?.data?.profile_image).startsWith("https"))
+        setLoading(false)
+      } else{
+        navigate("/login")
+      }
     }).catch((err)=>{
       setLoading(true)
       console.log(err)
@@ -32,7 +44,113 @@ const Home = () => {
       navigate("/login")
     }
    
-  },[])
+  },[verfiySmsState,verfiySmsResponse])
+
+  const handleEmailVerfication = ()=>{
+      
+      const userEmail = userDetails?.data?.email;
+
+      const formData = {
+        userEmail
+      }
+      if(token)
+        {
+          const response = fetch("http://localhost:3000/emailverfication", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`, 
+            },
+            body: JSON.stringify(formData),
+        }).then((response)=> response.json()).then((data)=>{
+
+          setSendEmailState(true)
+
+          setTimeout(()=>{ setSendEmailState(false)},3000)
+
+        }).catch((err)=>{
+          console.error(err)
+        });
+
+        } else{
+          navigate("/login")
+        }
+       
+
+  }
+
+  const handleGetSms = ()=>{
+    const userMobileNum = userDetails?.data?.phone_num?.number
+    
+    if(userMobileNum)
+    {
+      if(token)
+        {
+          const formData ={
+            number: userMobileNum
+          }
+          const response = fetch("http://localhost:3000/getsmsotp", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`, 
+            },
+            body: JSON.stringify(formData),
+        }).then((response)=> response.json()).then((data)=>{
+
+          setSendSmsState(true)
+
+          setTimeout(()=>{ setSendSmsState(false)},3000)
+
+        }).catch((err)=>{
+          console.error(err)
+        });
+
+        } else{
+          navigate("/login")
+        }
+
+    }else{
+      navigate("/login")
+    }
+
+  }
+
+  const handleSmsVerification =()=>{
+
+      if(token)
+        {
+          const formData ={
+            otp: userSmsOtp
+          }
+          const response = fetch("http://localhost:3000/verifynumber", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`, 
+            },
+            body: JSON.stringify(formData),
+        }).then((response)=> response.json()).then((data)=>{
+
+          if(data.status !== 200)
+          {
+            setVerfiySmsState(true)
+            
+          }else if(data.status == 200){
+            setVerfiySmsState(false)
+            setVerfiySmsResponse(data)
+          }else {
+            setVerfiySmsState(false)
+          }
+        }).catch((err)=>{
+          setVerfiySmsState(true) 
+          console.error(err)
+        });
+
+        } else{
+          navigate("/login")
+        }
+  }
 
   return (
     <>
@@ -57,19 +175,35 @@ const Home = () => {
                 </p>
           </div>
             <div className='w-36 h-36 pr-5 pt-3 bg-slate-500 rounded-lg'>
-            {(userDetails?.data?.profile_image) ?<img src={`http://localhost:3000/${userDetails?.data?.profile_image}`} className="h-full w-full rounded-lg" alt="User Avatar" /> : <img src="placeholder.jpg" className="h-full w-full rounded-lg" alt="User Avatar" />}
+            {(String(userDetails?.data?.profile_image).startsWith("https")) ? <img src={`${userDetails?.data?.profile_image}`} className="h-full w-full rounded-lg" alt="User Avatar" /> : (userDetails?.data?.profile_image) ? <img src={`http://localhost:3000/${userDetails?.data?.profile_image}`} className="h-full w-full rounded-lg" alt="User Avatar" /> :<img src="placeholder.jpg" className="h-full w-full rounded-lg" alt="User Avatar" /> }
             </div>
           </div>
           <hr className='my-12'/>
           <div className='container-edit-details'>
-            <div>
-                  <button className='bg-green-700 py-2 px-4 rounded-lg text-white font-semibold'>Get verfication Link</button>
+            <div className='py-4'>
+                  {(userDetails?.data?.is_verified == false) ? <button onClick={handleEmailVerfication} className='bg-green-700 py-2 px-4 rounded-lg text-white font-semibold hover:bg-green-800'>Get email verfication Link</button> : null}
+                  {sendEmailState && <p className='my-1 font-medium text-white text-xl'>***Email sent Successfully***</p>}
             </div>
-            <div className="mb-5">
-              <label htmlFor="phone_num" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Enter your Mobile Number</label>
-              <input type="number" id="phone_num" name='phone_num' className="no-spinner shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" required/>
+            {(userDetails?.data?.phone_num?.number_verified == false) ? <><div className='flex items-center gap-3'>
+                  <div className=" max-w-[25vw] ">
+                    <input value={userDetails?.data?.phone_num?.number} disabled type="number" id="phone_num" name='phone_num' className="no-spinner shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" placeholder='Enter your mobile number'/>
+                  </div>
+                  <div>
+                      <button onClick={handleGetSms} className='bg-green-700 hover:bg-green-800 py-2 px-4 rounded-lg text-white font-semibold '>Get sms OTP</button>   
+                  </div>
+              </div>
+              {sendSmsState && <p className='my-1 font-medium text-white text-xl'>***sms sent Successfully***</p>}
+              <label htmlFor="phone_num" className="block mt-8 mb-2 text-sm font-medium bg-gray-900 py-2 px-4 rounded-md text-white w-fit">Enter your OTP</label>
+              <div className='flex items-center gap-3 '>
+                  <div className="max-w-[25vw]">
+                    <input onChange={(event)=>setUserSmsOtp(event.target.value)} value={userSmsOtp} type="number" id="phone_num" name='phone_num' className="no-spinner shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" placeholder='Enter sms 4 digit OTP'/>
+                  </div>
+                  <div>
+                      <button onClick={handleSmsVerification} className='bg-green-700 hover:bg-green-800 py-2 px-4 rounded-lg text-white font-semibold '>verify mobile number</button>
+                  </div>
+              </div></> : null}
+              {verfiySmsState && <p className='my-1 font-medium text-red-700 text-xl'>***invalid otp***</p>}
         </div>
-          </div>
       </div>
     </>
   )

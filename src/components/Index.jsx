@@ -7,6 +7,7 @@ import Todo from './Todo';
 import Login from "./Login"
 import SignUp from "./SignUp"
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import EditUserDetails from './EditUserDetails';
 
 
 const Index = () => {
@@ -21,6 +22,7 @@ const Index = () => {
       <Route path="/completedtodos" element={<CompletedTodos/>} />
       <Route path="/login" element={<Login/>} />
       <Route path="/signup" element={<SignUp/>} />
+      <Route path="/edit" element={<EditUserDetails/>} />
       </Routes>
     </BrowserRouter>
     </>

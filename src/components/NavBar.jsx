@@ -6,6 +6,7 @@ const NavBar = () => {
   const [toggle, setToggle] = useState(true);
   const [userDetails, setUserDetails] = useState({});
   const [token, setToken] = useState(localStorage.getItem("auth_token"));
+  const [showEdit, setShowEdit] = useState(false)
 
   const navigate = useNavigate()
   
@@ -80,11 +81,13 @@ const NavBar = () => {
               <NavLink to="/signup"><li className="text-yellow-500 font-bold">Sign Up</li></NavLink>
             </>
           )}
-          <div className="w-14 h-14 rounded-full bg-slate-400">
-            {(userDetails?.data?.profile_image) ?<img src={`http://localhost:3000/${userDetails?.data?.profile_image}`} className="h-full w-full rounded-full" alt="User Avatar" /> : <img src="placeholder.jpg" className="h-full w-full rounded-full" alt="User Avatar" />}
-            
+          <div className="w-14 h-14 rounded-full bg-slate-400" onClick={()=>setShowEdit(!showEdit)} onMouseEnter={()=>setShowEdit(true)}>
+          {(String(userDetails?.data?.profile_image).startsWith("https")) ? <img src={`${userDetails?.data?.profile_image}`} className="h-full w-full rounded-full" alt="User Avatar" /> : (userDetails?.data?.profile_image) ? <img src={`http://localhost:3000/${userDetails?.data?.profile_image}`} className="h-full w-full rounded-full" alt="User Avatar" /> :<img src="placeholder.jpg" className="h-full w-full rounded-full" alt="User Avatar" /> }
           </div>
         </ul>
+          {showEdit && <div className='w-fit absolute top-16 right-7 bg-slate-800 rounded-lg py-2 px-2'>
+          <NavLink to="/edit"><li className="text-white font-bold list-none text-center cursor-pointer hover:underline">Edit details</li></NavLink>
+          </div>}
       </nav>
     </div>
   );
