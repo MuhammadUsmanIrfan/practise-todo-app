@@ -54,7 +54,7 @@ const EditUserDetails = () => {
           
     formData.append('first_name', (data.first_name) ? data.first_name: "");
     formData.append('last_name', (data.last_name) ? data.last_name: "");
-    formData.append('number', (data.number) ? data.number: null);
+    formData.append('number', (data.number) ? data.number: "");
     formData.append('file', (data.file[0]) ? data.file[0] : null);  
     
     if(token)
