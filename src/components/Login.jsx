@@ -16,11 +16,10 @@ const Login = () => {
   } = useForm()
 
   useEffect(() => {
-    // Check if the token is in the URL
+
     const urlParams = new URLSearchParams(window.location.search);
     const tokenFromUrl = urlParams.get('token');
     
-    console.log(tokenFromUrl)
 
     if (tokenFromUrl) {
       setToken(tokenFromUrl);

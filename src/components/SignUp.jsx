@@ -1,15 +1,21 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom' 
+import { useSelector, useDispatch } from 'react-redux'
+import {  checkPassword, checkUser, checkPassword2, checkUser2} from "../app/slices/signUpSlice"
+import { useUserRegisterMutation } from '../app/apis/userAccess'
 
-const SignUp = () => {
 
-  const[checkPassword, setCheckPassword]=useState(false)
-  const[checkUser, setCheckUser]=useState(false)
+  const SignUp = () => {
 
+  
+  const password = useSelector((state) => state.signUpReducer.password)
+  const user = useSelector((state) => state.signUpReducer.user)
+  const dispatch = useDispatch()
 
   const navigate = useNavigate();
-
+ 
+  const [userRegister] = useUserRegisterMutation()
 
   const {
     register,
@@ -22,9 +28,10 @@ const SignUp = () => {
       
     if(data.password !== data.r_password)
     {
-      setCheckPassword(!checkPassword)
+      dispatch(checkPassword())
     }else{
-
+      
+      dispatch(checkPassword2())
       const formData = new FormData();
         
       
@@ -35,19 +42,19 @@ const SignUp = () => {
       formData.append('password', data.password);
       formData.append('phone_num', data.phone_num);
       
-      const userSubmitData = await fetch("http://localhost:3000/signup",{
-        method: 'POST',
-        body:formData,
-      })
-      const userRegisterResponse = await userSubmitData.json()
+      const userRegisterResponse = await userRegister(formData)
 
-      if(userRegisterResponse.status=== 201)
+
+      
+      
+      if(userRegisterResponse?.data.status === 201)
         {
 
           navigate("/login")
+          dispatch(checkUser2())
           
         } else{
-          setCheckUser(true)
+          dispatch(checkUser())
         }
     }
 
@@ -58,9 +65,9 @@ const SignUp = () => {
     <>
     <div className='container px-4 py-4 md:py-12 md:px-12  min-h-[calc(100vh-4.5rem)] w-[100%] bg-slate-600'>
     <h1 className='text-center text-2xl font-bold text-white'>SignUp Page</h1>
-      <form className="max-w-sm mx-auto" onSubmit={handleSubmit(handleForm)} method='POST' enctype="multipart/form-data">
+      <form className="max-w-sm mx-auto" onSubmit={handleSubmit(handleForm)} method='POST' encType="multipart/form-data">
 
-        {checkUser && <h2 className='text-red-900 text-center mt-4 font-bold'>***This user is already registerd***</h2>}
+        {user && <h2 className='text-red-900 text-center mt-4 font-bold'>***This user is already registerd***</h2>}
 
       <div className='flex gap-12 mt-5'>
 
@@ -94,15 +101,15 @@ const SignUp = () => {
         <div className='md:flex gap-12'>
         <div className="mb-5">
           <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your password</label>
-          <input type="password" id="password" name='password' {...register("password")} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" required />
-          {checkPassword && <span className='text-red-900'>*Password not matching*</span>}
+          <input type="password" autoComplete='on' id="password" name='password' {...register("password")} className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" required />
+          {password && <span className='text-red-900'>*Password not matching*</span>}
           
         </div>
 
         <div className="mb-5">
           <label htmlFor="r_password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Repeat password</label>
-          <input type="password" id="r_password" name='r_password' {...register("r_password")}className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" required />
-          {checkPassword && <span className='text-red-900'>*Password not matching*</span>}
+          <input type="password" autoComplete='on' id="r_password" name='r_password' {...register("r_password")}className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" required />
+          {password && <span className='text-red-900'>*Password not matching*</span>}
         </div>
 
         </div>
