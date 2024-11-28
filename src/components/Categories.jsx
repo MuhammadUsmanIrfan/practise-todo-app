@@ -1,20 +1,40 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect} from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom' 
 import { useUserValidateMutation } from '../app/apis/userAccess'
+import { useSelector, useDispatch } from 'react-redux'
+import { validateTheUser } from '../app/slices/userValidateSlice'
+import { getAllCategories, addCategoriesResponse,delteCategoriesResponse,setEditCategoryBtn,setPrevCategory,setcategory_name,editCategoriesResponse} from '../app/slices/categoriesSlice'
+import { useGetCategoriesMutation,useAddCategoriesApiMutation,useDeleteCategoriesApiMutation,useEditCategoriesApiMutation } from '../app/apis/categoriesApi'
 
 const Categories = () => {
-  const [token, setToken] = useState(localStorage.getItem("auth_token"));
-  const [categoryResponse , setCategoryResponse] = useState({})
-  const [getCategory , SetgetCategory] = useState({})
-  const [deletecategory, setDeletecategory] = useState({})
-  const [editCategory, setEditCategory] = useState("")
-  const [editCategoryBtn, setEditCategoryBtn] = useState(false)
-  const [PrevCategory, setPrevCategory] = useState("")
+  
+  const token = useSelector((state)=> (state.userValidateReducer.token ))
+  const userValidateResponse = useSelector((state)=> state.userValidateReducer.userValidateResponse)
+  const getCategory = useSelector((state)=> state.categoriesReducer.getCategories)
+  const addCategory = useSelector((state)=> state.categoriesReducer.addCategory)
+  const deleteCategory = useSelector((state)=> state.categoriesReducer.deleteCategory)
+  const editCategory = useSelector((state)=> state.categoriesReducer.editCategory)
+  const editCategoryBtn = useSelector((state)=> state.categoriesReducer.editCategoryBtn)
+  const PrevCategory = useSelector((state)=> state.categoriesReducer.PrevCategory)
+  const category_name = useSelector((state)=> state.categoriesReducer.category_name)
 
+  /**
+   * Here 👇 We getting all the APIs
+   */
   const [userValidate] = useUserValidateMutation()
+  const [getCategories] = useGetCategoriesMutation()
+  const [addCategoriesApi] = useAddCategoriesApiMutation()
+  const [deleteCategoriesApi] = useDeleteCategoriesApiMutation()
+  const [editCategoriesApi] = useEditCategoriesApiMutation()
+  // --------------***--------------
 
+
+  const dispatch = useDispatch()
+ 
   const navigate = useNavigate()
+  
+  
   const {
     register,
     handleSubmit,
@@ -23,80 +43,65 @@ const Categories = () => {
 
 
   useEffect(()=>{
-
+    console.log("Categoires useEffect runs")
     if(token)
     {
+      const validatingTheToken = async()=> {
+        try {
+        const validateToken = await  userValidate(token)
+        dispatch(validateTheUser(validateToken.data))
+        getCategories(token).then((resp)=>dispatch(getAllCategories(resp.data))).catch((err)=>console.error(err))
+
+        } catch (err) {
+          console.error(err)  
+        }
+          
+      }
       
-      userValidate(token).then((resp)=>{
-        
-          if(resp?.data?.status == 200)
-          {
+      validatingTheToken()
+      // userValidate(token).then((resp)=>dispatch(validateTheUser(resp.data))).catch((err)=>console.error(err))
+     
+
+    } else{
+
+    navigate("/login")
+  }
+  },[deleteCategory, addCategory, editCategory])
+  
+  const handleForm = async()=>{
+    
+    if (token) {     
+        const addcategoryParametters = {
+          token, formData:{category_name}
+        }
+        const addCategoriesApiResponse =  await addCategoriesApi(addcategoryParametters)
+        dispatch(addCategoriesResponse(addCategoriesApiResponse))
 
           }else{
             navigate("/login")
-          }
-
-
-
-      }).catch((err)=>console.error(err))
-
-     
-
-    fetch("http://localhost:3000/category/getcategories?page=1&limit=20", {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, 
-      },
-     
-    }).then((resp)=>resp.json()).then((resp)=>{SetgetCategory(resp)}).catch((err)=>console.error("failed to add category", err.message))
-
-
-  } else{
-   
-    navigate("/login")
-  }
-  },[categoryResponse,deletecategory,editCategoryBtn])
-  
-  const handleForm = async(formData)=>{
-    
-    formData.category_name = editCategory
-    
-    console.log(formData)
-    if (token) {
-     
-            fetch("http://localhost:3000/category/addcategory", {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`, 
-              },
-              body: JSON.stringify(formData),
-            }).then((resp)=>resp.json()).then((resp)=> setCategoryResponse(resp)).catch((err)=>console.error("failed to add category", err.message))
-
-          } else{
-            navigate("/login")
           }       
-    
   }
 
-  const handleDelete=(category_name)=>{
+  const handleDelete=async (category_name)=>{
   
-      const data = {
-        category_name
-      }
-     
+      
       if(token)
       {
-
-        fetch("http://localhost:3000/category/deletecategory", {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`, 
-          },
-          body: JSON.stringify(data),
-        }).then((resp)=>resp.json()).then((resp)=> setDeletecategory(resp)).catch((err)=>console.error("failed to add category", err.message))
+        const data = {
+          token,
+          category_name,
+        }
+       
+         const deleteCategoriesResponse= await deleteCategoriesApi(data)
+         dispatch(delteCategoriesResponse(deleteCategoriesResponse))
+        // fetch("http://localhost:3000/category/deletecategory", {
+        //   method: 'DELETE',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //     'Authorization': `Bearer ${token}`, 
+        //   },
+        //   body: JSON.stringify(data),
+        // }).then((resp)=>resp.json()).then((resp)=> setDeletecategory(resp)).catch((err)=>console.error("failed to add category", err.message))
 
       }else{
             navigate("/login")
@@ -104,33 +109,26 @@ const Categories = () => {
   }
 
   const handleEditCategoryBtn =(category_name)=>{
-    setEditCategoryBtn(true)
-    setEditCategory(category_name)
-    setPrevCategory(category_name)
+   dispatch(setEditCategoryBtn(true))
+   dispatch(setcategory_name(category_name))
+   dispatch(setPrevCategory(category_name))
   }
 
-  const handleUpdateBtn = ()=>{
-    setEditCategoryBtn(false)
-    setEditCategory("")
-    console.log(PrevCategory , editCategory)
-
+  const handleUpdateBtn =async ()=>{
+    dispatch(setEditCategoryBtn(false))
+     
     const data = {
        category_name:PrevCategory,
-       new_name:editCategory,
+       new_name:category_name,
     }
-   
+  
     if(token)
     {
+      data.token =token
+      const resp = await editCategoriesApi(data)
+      dispatch(editCategoriesResponse(resp))
 
-      fetch("http://localhost:3000/category/editcategory", {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, 
-        },
-        body: JSON.stringify(data),
-      }).then((resp)=>resp.json()).then((resp)=> setDeletecategory(resp)).catch((err)=>console.error("failed to edit category", err.message))
-
+      dispatch(setcategory_name(""))
     }else{
           navigate("/login")
         } 
@@ -146,7 +144,7 @@ const Categories = () => {
           <div className='flex items-center justify-center gap-4 mt-8'>
 
             <div className="w-72">
-                <input type="text" value={editCategory} onChange={(event)=>setEditCategory(event.target.value)} name='category_name' className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" placeholder='Category name' required/>
+                <input type="text" value={category_name} onChange={(event)=>dispatch(setcategory_name(event.target.value))} name='category_name' className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light" placeholder='Category name' required/>
             </div>
 
             <div>

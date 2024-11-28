@@ -31,7 +31,6 @@ const Home = () => {
       if(data.status == 200)
       {
         setUserDetails(data)
-        console.log(String(userDetails?.data?.profile_image).startsWith("https"))
         setLoading(false)
       } else{
         navigate("/login")
