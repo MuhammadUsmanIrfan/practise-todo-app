@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom' 
+import { useUserValidateMutation } from '../app/apis/userAccess'
 
 const Categories = () => {
   const [token, setToken] = useState(localStorage.getItem("auth_token"));
@@ -11,6 +12,7 @@ const Categories = () => {
   const [editCategoryBtn, setEditCategoryBtn] = useState(false)
   const [PrevCategory, setPrevCategory] = useState("")
 
+  const [userValidate] = useUserValidateMutation()
 
   const navigate = useNavigate()
   const {
@@ -19,6 +21,43 @@ const Categories = () => {
     formState: { errors },
   } = useForm()
 
+
+  useEffect(()=>{
+
+    if(token)
+    {
+      
+      userValidate(token).then((resp)=>{
+        
+          if(resp?.data?.status == 200)
+          {
+
+          }else{
+            navigate("/login")
+          }
+
+
+
+      }).catch((err)=>console.error(err))
+
+     
+
+    fetch("http://localhost:3000/category/getcategories?page=1&limit=20", {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`, 
+      },
+     
+    }).then((resp)=>resp.json()).then((resp)=>{SetgetCategory(resp)}).catch((err)=>console.error("failed to add category", err.message))
+
+
+  } else{
+   
+    navigate("/login")
+  }
+  },[categoryResponse,deletecategory,editCategoryBtn])
+  
   const handleForm = async(formData)=>{
     
     formData.category_name = editCategory
@@ -40,26 +79,6 @@ const Categories = () => {
           }       
     
   }
-
-  useEffect(()=>{
-
-    if(token)
-    {
-    fetch("http://localhost:3000/category/getcategories?page=1&limit=20", {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, 
-      },
-     
-    }).then((resp)=>resp.json()).then((resp)=>{SetgetCategory(resp)}).catch((err)=>console.error("failed to add category", err.message))
-
-
-  } else{
-   
-    navigate("/login")
-  }
-  },[categoryResponse,deletecategory,editCategoryBtn])
 
   const handleDelete=(category_name)=>{
   

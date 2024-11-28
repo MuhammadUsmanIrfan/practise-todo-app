@@ -6,10 +6,9 @@ export const userAccessApi= createApi({
     baseQuery : fetchBaseQuery({baseUrl:import.meta.env.VITE_API_URL}),
     endpoints: (builder)=> ({
        
-        getAllProducts : builder.query({
-            query : ()=> "/products"
-        }),
-
+        // getAllProducts : builder.query({
+        //     query : ()=> "/products"
+        // }),
         
         userRegister: builder.mutation({
             query : (userDetails)=>({
@@ -19,7 +18,32 @@ export const userAccessApi= createApi({
                 body:userDetails
             })
         }),
+
+        userLogin: builder.mutation({
+            query : (userDetails)=>({
+                url: `signin`,
+                method: "POST",
+                header: { "Content-Type": "application/json" },
+                body:userDetails
+            })
+        }),
+        userLogin: builder.mutation({
+            query : (userDetails)=>({
+                url: `signin`,
+                method: "POST",
+                header: { "Content-Type": "application/json"},
+                body:userDetails
+            })
+        }),
+
+        userValidate: builder.mutation({
+            query : (token)=>({
+                url: 'validate',
+                method: "POST",
+                headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` }
+            })
+        }),
     })
 })
 
-export const {useUserRegisterMutation} = userAccessApi
+export const {useUserRegisterMutation, useUserLoginMutation, useUserValidateMutation } = userAccessApi

@@ -129,7 +129,7 @@ const EditUserDetails = () => {
     <>
 
       <div className='container px-4 py-4 md:py-12 md:px-12  min-h-[calc(100vh-4.5rem)] w-[100%] bg-slate-600 relative'>
-      <div className='bg-slate-700 min-h-[100vh] w-[12%] absolute left-0 top-0'>
+      <div className='bg-slate-700 min-h-full w-[12%] absolute left-0 top-0'>
               <p onClick={()=>setToggleChangPassord(false)} className='cursor-pointer py-3 px-2 font-medium hover:underline text-yellow-500'>Change user details</p>
               <p onClick={()=>setToggleChangPassord(true)} className='cursor-pointer py-3 px-2 font-medium hover:underline text-yellow-500'>Change Password</p>              
       </div>
