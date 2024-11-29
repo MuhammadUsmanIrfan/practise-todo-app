@@ -1,17 +1,15 @@
 import React, { useEffect} from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom' 
-import { useUserValidateMutation } from '../app/apis/userAccess'
 import { useSelector, useDispatch } from 'react-redux'
-import { validateTheUser } from '../app/slices/userValidateSlice'
-import { getAllCategories, addCategoriesResponse,delteCategoriesResponse,setEditCategoryBtn,setPrevCategory,setcategory_name,editCategoriesResponse} from '../app/slices/categoriesSlice'
-import { useGetCategoriesMutation,useAddCategoriesApiMutation,useDeleteCategoriesApiMutation,useEditCategoriesApiMutation } from '../app/apis/categoriesApi'
+import { resetToken, jwtTokenValidation } from '../app/slices/userValidateSlice'
+import { setEditCategoryBtn,setPrevCategory,setcategory_name, getAllCategoriesApi , addCategoryApi, editCategoryApi, deleteCategoryApi} from '../app/slices/categoriesSlice'
 
 const Categories = () => {
   
   const token = useSelector((state)=> (state.userValidateReducer.token ))
-  const userValidateResponse = useSelector((state)=> state.userValidateReducer.userValidateResponse)
-  const getCategory = useSelector((state)=> state.categoriesReducer.getCategories)
+  const tokenValidateResponse = useSelector((state)=> state.userValidateReducer.tokenValidateResponse)
+  const getCategories = useSelector((state)=> state.categoriesReducer.getCategories)
   const addCategory = useSelector((state)=> state.categoriesReducer.addCategory)
   const deleteCategory = useSelector((state)=> state.categoriesReducer.deleteCategory)
   const editCategory = useSelector((state)=> state.categoriesReducer.editCategory)
@@ -19,22 +17,10 @@ const Categories = () => {
   const PrevCategory = useSelector((state)=> state.categoriesReducer.PrevCategory)
   const category_name = useSelector((state)=> state.categoriesReducer.category_name)
 
-  /**
-   * Here 👇 We getting all the APIs
-   */
-  const [userValidate] = useUserValidateMutation()
-  const [getCategories] = useGetCategoriesMutation()
-  const [addCategoriesApi] = useAddCategoriesApiMutation()
-  const [deleteCategoriesApi] = useDeleteCategoriesApiMutation()
-  const [editCategoriesApi] = useEditCategoriesApiMutation()
-  // --------------***--------------
-
-
   const dispatch = useDispatch()
  
   const navigate = useNavigate()
-  
-  
+    
   const {
     register,
     handleSubmit,
@@ -43,66 +29,45 @@ const Categories = () => {
 
 
   useEffect(()=>{
-    console.log("Categoires useEffect runs")
-    if(token)
-    {
-      const validatingTheToken = async()=> {
-        try {
-        const validateToken = await  userValidate(token)
-        dispatch(validateTheUser(validateToken.data))
-        getCategories(token).then((resp)=>dispatch(getAllCategories(resp.data))).catch((err)=>console.error(err))
+    console.log("useEffect 1")
+    dispatch(jwtTokenValidation(token))
+  },[ token])
 
-        } catch (err) {
-          console.error(err)  
-        }
-          
+  useEffect(() => {
+    console.log("useEffect 2")
+      if(tokenValidateResponse?.error?.status == 400 || tokenValidateResponse.success === false)
+      {
+        dispatch(resetToken())
+        navigate("/login")
+      }else{ 
+        dispatch(getAllCategoriesApi(token))
       }
-      
-      validatingTheToken()
-      // userValidate(token).then((resp)=>dispatch(validateTheUser(resp.data))).catch((err)=>console.error(err))
-     
 
-    } else{
-
-    navigate("/login")
-  }
-  },[deleteCategory, addCategory, editCategory])
+  }, [tokenValidateResponse, deleteCategory, addCategory, editCategory]);
   
   const handleForm = async()=>{
-    
+   
     if (token) {     
-        const addcategoryParametters = {
-          token, formData:{category_name}
-        }
-        const addCategoriesApiResponse =  await addCategoriesApi(addcategoryParametters)
-        dispatch(addCategoriesResponse(addCategoriesApiResponse))
-
+        const formData = {
+          token, data:{category_name}
+          }
+       
+        dispatch(addCategoryApi(formData))
+       
           }else{
             navigate("/login")
           }       
   }
 
   const handleDelete=async (category_name)=>{
-  
-      
+       
       if(token)
       {
-        const data = {
+        const formData = {
           token,
-          category_name,
+          data: {category_name}
         }
-       
-         const deleteCategoriesResponse= await deleteCategoriesApi(data)
-         dispatch(delteCategoriesResponse(deleteCategoriesResponse))
-        // fetch("http://localhost:3000/category/deletecategory", {
-        //   method: 'DELETE',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //     'Authorization': `Bearer ${token}`, 
-        //   },
-        //   body: JSON.stringify(data),
-        // }).then((resp)=>resp.json()).then((resp)=> setDeletecategory(resp)).catch((err)=>console.error("failed to add category", err.message))
-
+        dispatch(deleteCategoryApi(formData))
       }else{
             navigate("/login")
           }   
@@ -117,17 +82,18 @@ const Categories = () => {
   const handleUpdateBtn =async ()=>{
     dispatch(setEditCategoryBtn(false))
      
-    const data = {
-       category_name:PrevCategory,
-       new_name:category_name,
-    }
-  
     if(token)
     {
-      data.token =token
-      const resp = await editCategoriesApi(data)
-      dispatch(editCategoriesResponse(resp))
-
+     
+      const fromdata = {
+        token,
+        data :{
+          category_name:PrevCategory,
+          new_name:category_name,
+        }
+      }
+     
+      dispatch(editCategoryApi(fromdata))
       dispatch(setcategory_name(""))
     }else{
           navigate("/login")
@@ -163,7 +129,7 @@ const Categories = () => {
              <ul className='flex flex-wrap gap-4 justify-center'>
               
 
-                { getCategory?.data?.map(element => (
+                { getCategories?.data?.map(element => (
                     (element.is_deleted != true) ?  
                     <div className='w-fit flex items-center space-x-3 border border-gray-400 rounded-md p-2 hover:bg-slate-700' key={element._id}>
                       <li className='list-none block text-xl text-white bg-slate-950 w-[100%] p-2 rounded-md'>

@@ -2,12 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { RxHamburgerMenu } from "react-icons/rx";
 import { NavLink } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux'
+import {setUserValidateResponse, setToken, resetToken } from '../app/slices/userValidateSlice';
 const NavBar = () => {
+
+  const tokenRTk = useSelector((state)=> (state.userValidateReducer.token )) 
+
   const [toggle, setToggle] = useState(true);
   const [userDetails, setUserDetails] = useState({});
   const [token, setToken] = useState(localStorage.getItem("auth_token"));
   const [showEdit, setShowEdit] = useState(false)
 
+  const dispatch = useDispatch()
   const navigate = useNavigate()
   
   useEffect(() => {
@@ -38,6 +44,7 @@ const NavBar = () => {
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
     setUserDetails({});
+    dispatch(resetToken(""))
     setToken("")
     navigate("/login")
   };

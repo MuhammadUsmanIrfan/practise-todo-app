@@ -18,15 +18,6 @@ export const userAccessApi= createApi({
                 body:userDetails
             })
         }),
-
-        userLogin: builder.mutation({
-            query : (userDetails)=>({
-                url: `signin`,
-                method: "POST",
-                header: { "Content-Type": "application/json" },
-                body:userDetails
-            })
-        }),
         userLogin: builder.mutation({
             query : (userDetails)=>({
                 url: `signin`,
