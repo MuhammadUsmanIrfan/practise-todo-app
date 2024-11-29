@@ -1,91 +1,75 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from 'react-redux'
+import { resetToken, jwtTokenValidation } from '../app/slices/userValidateSlice.js'
+import { getAllCategoriesApi } from "../app/slices/categoriesSlice.js";
+import { getAllTodosApi, deleteTodoApi, setTodocompletedApi} from "../app/slices/TodoSlice.js";
+
+
 
 const CompletedTodos = () => {
-  const [getTodos, SetgetTodos] = useState({});
-  const [token, setToken] = useState(localStorage.getItem("auth_token"));
-  const [todoResponse, setTodoResponse] = useState({});
-  const [getCategory, SetgetCategory] = useState({});
-  const [completeTodo, setCompleteTodo] = useState({});
-  const [deleteTodo, setDeleteTodo] = useState({});
+
+
+  const token = useSelector((state)=> (state.userValidateReducer.token ))
+  const tokenValidateResponse = useSelector((state)=> state.userValidateReducer.tokenValidateResponse)
+  const getTodos = useSelector((state)=> state.todoReducer.getTodos)
+  const todoResponse = useSelector((state)=> state.todoReducer.todoResponse)
+  const completeTodo = useSelector((state)=> state.todoReducer.completeTodo)
+  const deleteTodo = useSelector((state)=> state.todoReducer.deleteTodo)
+  // const getCategory = useSelector((state)=> state.categoriesReducer.getCategories)
+  
   const navigate = useNavigate();
+  const dispatch = useDispatch()
+  
+  useEffect(()=>{
+    dispatch(jwtTokenValidation(token))
+  },[ token])
 
   useEffect(() => {
-    if (token) {
-      fetch("http://localhost:3000/category/getcategories?page=1&limit=20", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((resp) => resp.json())
-        .then((resp) => {
-          SetgetCategory(resp);
-        })
-        .catch((err) => console.error("failed to add category", err.message));
+   
+      if(tokenValidateResponse?.error?.status == 400 || tokenValidateResponse.success === false)
+      {
+        dispatch(resetToken())
+        navigate("/login")
+      }else{ 
+        dispatch(getAllCategoriesApi(token))
+        dispatch(getAllTodosApi(token))
+      }
 
-      fetch("http://localhost:3000/todoroutes/gettodos?page=1&limit=20", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((resp) => resp.json())
-        .then((resp) => {
-          SetgetTodos(resp);
-        })
-        .catch((err) => console.error("failed to add category", err.message));
-    } else {
-      navigate("/login");
-    }
   }, [todoResponse, completeTodo, deleteTodo]);
 
+  
   const handleComplete = (e, id) => {
-    const data = {
-      editTodoID: id,
-      value: String(e.target.checked),
-    };
-    console.log(data);
+   
     if (token) {
-      fetch("http://localhost:3000/todoroutes/setcompleted", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      })
-        .then((resp) => resp.json())
-        .then((resp) => setCompleteTodo(resp))
-        .catch((err) => console.error("failed to add category", err.message));
+        const formData = {
+          token,
+          data : {
+            editTodoID: id,
+            value: String(e.target.checked)}
+        }
+        dispatch(setTodocompletedApi(formData))
     } else {
       navigate("/login");
     }
   };
-  const handleDeleteTodo = (item) => {
-    const data = {
-      todoID: item._id,
-    };
 
-    console.log(JSON.stringify(data));
+  const handleDeleteTodo = (item) => {
+    
     if (token) {
-      fetch("http://localhost:3000/todoroutes/deletetodo", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      })
-        .then((resp) => resp.json())
-        .then((resp) => setDeleteTodo(resp))
-        .catch((err) => console.error("failed to add category", err.message));
+      const formData = {
+        token,
+        data : {
+          todoID: item._id,
+        }
+      }
+  
+      dispatch(deleteTodoApi(formData))
     } else {
       navigate("/login");
     }
   };
+
   return (
     <>
       <div className="container px-4 py-4 md:py-12 md:px-12 h-[calc(100vh-4.5rem)] w-[100%] bg-slate-600">

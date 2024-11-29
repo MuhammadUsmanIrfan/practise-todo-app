@@ -3,9 +3,13 @@ import  signUpReducer from "./slices/signUpSlice"
 import loginReducer from "./slices/LoginSlice"
 import userValidateReducer from "./slices/userValidateSlice"
 import  categoriesReducer  from './slices/categoriesSlice'
+import  todoReducer  from './slices/TodoSlice'
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { userAccessApi } from './apis/userAccess';
 import { categoriesApi } from './apis/categoriesApi'
+import NavBarReducer from "./slices/NavBarSlice"
+
+
 export const store = configureStore({
   
   reducer: {
@@ -13,6 +17,8 @@ export const store = configureStore({
     loginReducer :  loginReducer,
     userValidateReducer :  userValidateReducer,
     categoriesReducer :  categoriesReducer,
+    todoReducer :  todoReducer,
+    NavBarReducer :  NavBarReducer,
     [userAccessApi.reducerPath] : userAccessApi.reducer
   },
 

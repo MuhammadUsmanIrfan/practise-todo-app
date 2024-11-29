@@ -50,7 +50,7 @@ export const editCategoryApi = createAsyncThunk("editCategoryApi", async(fromdat
  })
 
 const initialState = {
-  getCategories: { date : []},
+  getCategories: { },
   error : false,
   addCategory: {},
   deleteCategory: {},

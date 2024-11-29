@@ -1,62 +1,61 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect,  useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from 'react-redux'
+import { resetToken, jwtTokenValidation } from '../app/slices/userValidateSlice.js'
+import { getAllCategoriesApi } from "../app/slices/categoriesSlice.js";
+import {setTodoInput,setUpdateTodoStatus,setUpdateTodoId, getAllTodosApi,addTodoApi,setSelectedOption,deleteTodoApi,editTodoApi, setTodocompletedApi} from "../app/slices/TodoSlice.js";
 
 const Todo = () => {
-  const [token, setToken] = useState(localStorage.getItem("auth_token"));
-  const [getCategory, SetgetCategory] = useState({});
-  const [todoResponse, setTodoResponse] = useState({});
-  const [getTodos, SetgetTodos] = useState({});
-  const [deleteTodo, setDeleteTodo] = useState({});
-  const [completeTodo, setCompleteTodo] = useState({});
+  const token = useSelector((state)=> (state.userValidateReducer.token ))
+  const tokenValidateResponse = useSelector((state)=> state.userValidateReducer.tokenValidateResponse)
+  const getCategories = useSelector((state)=> state.categoriesReducer.getCategories)
+  const todoResponse = useSelector((state)=> state.todoReducer.todoResponse)
+  const getTodos = useSelector((state)=> state.todoReducer.getTodos)
+  const selectedOption = useSelector((state)=> state.todoReducer.selectedOption)
+  const deleteTodo = useSelector((state)=> state.todoReducer.deleteTodo)
+  const completeTodo = useSelector((state)=> state.todoReducer.completeTodo)
+  const todoInput = useSelector((state)=> state.todoReducer.todoInput)
+  const updateTodoStatus = useSelector((state)=> state.todoReducer.updateTodoStatus)
+  const updateTodoId = useSelector((state)=> state.todoReducer.updateTodoId)
+
+
   const navigate = useNavigate();
   const selectedOptionRef = useRef();
-  const [selectedOption, setSelectedOption] = useState("");
+  
 
-  const [todoInput, setTodoInput] = useState("")
-  const [updateTodoStatus, setUpdateTodoStatus] = useState(false)
-  const [updateTodoId, setUpdateTodoId] = useState("")
-
+  
+  const dispatch = useDispatch()
+  
+  
+  // RTK Logic----------
+  
+  useEffect(()=>{
+    
+    dispatch(jwtTokenValidation(token))
+  },[ token])
 
   useEffect(() => {
+   
+      if(tokenValidateResponse?.error?.status == 400 || tokenValidateResponse.success === false)
+      {
+        dispatch(resetToken())
+        navigate("/login")
+      }else{ 
+        dispatch(getAllCategoriesApi(token))
+        dispatch(getAllTodosApi(token))
+      }
 
-    
-    if (token) {
-      fetch("http://localhost:3000/category/getcategories?page=1&limit=20", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((resp) => resp.json())
-        .then((resp) => {
-          SetgetCategory(resp);
-        })
-        .catch((err) => console.error("failed to add category", err.message));
+  }, [tokenValidateResponse, todoResponse, deleteTodo, completeTodo]);
+  // ----------
 
-      fetch("http://localhost:3000/todoroutes/gettodos?page=1&limit=20", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((resp) => resp.json())
-        .then((resp) => {
-          SetgetTodos(resp);
-        })
-        .catch((err) => console.error("failed to add category", err.message));
-    } else {
-      navigate("/login");
-    }
-  }, [deleteTodo, todoResponse, completeTodo]);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
+
 
   const handleForm = async (formData) => {
     formData.content = todoInput
@@ -68,98 +67,68 @@ const Todo = () => {
     };
 
     if (token) {
-      fetch("http://localhost:3000/todoroutes/addtodo", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(addTodo),
-      })
-        .then((resp) => resp.json())
-        .then((resp) => setTodoResponse(resp))
-        .catch((err) => console.error("failed to add category", err.message));
+      console.log({token, data:addTodo})
+      dispatch(addTodoApi({token, data:addTodo}))
     } else {
       navigate("/login");
     }
   };
 
   const handleSelect = (event) => {
-    setSelectedOption(event.target.value);
+     dispatch(setSelectedOption(event.target.value))
   };
 
   const handleDeleteTodo = (item) => {
-    const data = {
-      todoID: item._id,
-    };
-
-    console.log(JSON.stringify(data));
+    
     if (token) {
-      fetch("http://localhost:3000/todoroutes/deletetodo", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      })
-        .then((resp) => resp.json())
-        .then((resp) => setDeleteTodo(resp))
-        .catch((err) => console.error("failed to add category", err.message));
+      const formData = {
+        token,
+        data : {
+          todoID: item._id,
+        }
+      }
+  
+      dispatch(deleteTodoApi(formData))
     } else {
       navigate("/login");
     }
   };
 
   const handleComplete = (e, id) => {
-    const data = {
-      editTodoID: id,
-      value: String(e.target.checked),
-    };
-    console.log(data);
+   
+   
     if (token) {
-      fetch("http://localhost:3000/todoroutes/setcompleted", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      })
-        .then((resp) => resp.json())
-        .then((resp) => setCompleteTodo(resp))
-        .catch((err) => console.error("failed to add category", err.message));
+        const formData = {
+          token,
+          data : {
+            editTodoID: id,
+            value: String(e.target.checked)}
+        }
+        dispatch(setTodocompletedApi(formData))
     } else {
       navigate("/login");
     }
   };
 
   const handleEditTodo = (id, todo)=> {
-    setUpdateTodoStatus(true)
-    setTodoInput(todo)
-    setUpdateTodoId(id)
+    dispatch(setUpdateTodoStatus(true))
+    dispatch(setTodoInput(todo))
+    dispatch(setUpdateTodoId(id))
   }
   
   const handleUpdateTodo =()=>{
-    setUpdateTodoStatus(false)
+    dispatch(setUpdateTodoStatus(false))
    
-
-    const data = {
-      editTodoID : updateTodoId,
-      newTodo : todoInput
-    }
     if(token)
       {
-  
-        fetch("http://localhost:3000/todoroutes/edittodo", {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`, 
-          },
-          body: JSON.stringify(data),
-        }).then((resp)=>resp.json()).then((resp)=> setDeleteTodo(resp)).catch((err)=>console.error("failed to add category", err.message))
-  
+        const formData = {
+          token,
+          data :{
+            editTodoID : updateTodoId,
+            newTodo : todoInput
+          }
+        }
+          dispatch(editTodoApi(formData))
       }else{
             navigate("/login")
           } 
@@ -179,7 +148,7 @@ const Todo = () => {
             ref={selectedOptionRef}
             required
           >
-            {getCategory?.data?.map((item) =>
+            {getCategories?.data?.map((item) =>
               item.is_deleted != true ? (
                 <option value={item?.category_name} key={item._id}>
                   {item?.category_name}
@@ -195,7 +164,7 @@ const Todo = () => {
               <input
                 type="text"
                 value={todoInput}
-                onChange={(event)=>setTodoInput(event.target.value)}
+                onChange={(event)=>dispatch(setTodoInput(event.target.value))}
                 name="content"
                 className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light"
                 placeholder="content"
@@ -219,7 +188,7 @@ const Todo = () => {
         </form>
         
         {
-         ( getCategory?.data?.every((item)=>(item.is_deleted == true))) && <p className="text-red-700 my-3 text-center font-bold">**Please create categorie first**</p>
+         ( getCategories?.data?.every((item)=>(item.is_deleted == true))) && <p className="text-red-700 my-3 text-center font-bold">**Please create categorie first**</p>
         }
         
         <div className="categories mt-10">

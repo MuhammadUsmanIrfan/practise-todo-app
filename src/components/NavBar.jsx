@@ -3,14 +3,17 @@ import { RxHamburgerMenu } from "react-icons/rx";
 import { NavLink } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux'
-import {setUserValidateResponse, setToken, resetToken } from '../app/slices/userValidateSlice';
+import { setUserValidateResponse, setToken, resetToken } from '../app/slices/userValidateSlice';
+import { setToggle, setShowEdit, setUserDetails } from '../app/slices/NavBarSlice';
+
 const NavBar = () => {
 
-  const tokenRTk = useSelector((state)=> (state.userValidateReducer.token )) 
-
+  const token = useSelector((state)=> (state.userValidateReducer.token ))
+  const tokenValidateResponse = useSelector((state)=> state.userValidateReducer.tokenValidateResponse)
+  
   const [toggle, setToggle] = useState(true);
   const [userDetails, setUserDetails] = useState({});
-  const [token, setToken] = useState(localStorage.getItem("auth_token"));
+  // const [token, setToken] = useState(localStorage.getItem("auth_token"));
   const [showEdit, setShowEdit] = useState(false)
 
   const dispatch = useDispatch()
