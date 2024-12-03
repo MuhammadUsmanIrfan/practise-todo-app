@@ -8,7 +8,7 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import { userAccessApi } from './apis/userAccess';
 import { categoriesApi } from './apis/categoriesApi'
 import NavBarReducer from "./slices/NavBarSlice"
-
+import editUserReducer from "./slices/editUserSlice"
 
 export const store = configureStore({
   
@@ -19,6 +19,7 @@ export const store = configureStore({
     categoriesReducer :  categoriesReducer,
     todoReducer :  todoReducer,
     NavBarReducer :  NavBarReducer,
+    editUserReducer :  editUserReducer,
     [userAccessApi.reducerPath] : userAccessApi.reducer
   },
 

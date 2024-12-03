@@ -3,17 +3,19 @@ import { RxHamburgerMenu } from "react-icons/rx";
 import { NavLink } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux'
-import { setUserValidateResponse, setToken, resetToken } from '../app/slices/userValidateSlice';
-import { setToggle, setShowEdit, setUserDetails } from '../app/slices/NavBarSlice';
+import {  setToken, resetToken } from '../app/slices/userValidateSlice';
+import { setCheckGooleAuth } from '../app/slices/LoginSlice';
+// import { setToggle, setShowEdit, setUserDetails } from '../app/slices/NavBarSlice';
 
 const NavBar = () => {
 
   const token = useSelector((state)=> (state.userValidateReducer.token ))
   const tokenValidateResponse = useSelector((state)=> state.userValidateReducer.tokenValidateResponse)
-  
+  const userEditDetailsResponse = useSelector((state) => state.editUserReducer.userEditDetailsResponse);
+  const checkGooleAuth = useSelector((state)=> state.loginReducer.checkGooleAuth)
+
   const [toggle, setToggle] = useState(true);
   const [userDetails, setUserDetails] = useState({});
-  // const [token, setToken] = useState(localStorage.getItem("auth_token"));
   const [showEdit, setShowEdit] = useState(false)
 
   const dispatch = useDispatch()
@@ -42,12 +44,13 @@ const NavBar = () => {
     } else {
       setUserDetails({});
     }
-  }, []);
+  }, [tokenValidateResponse,token,userEditDetailsResponse]);
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
     setUserDetails({});
     dispatch(resetToken(""))
+    dispatch(setCheckGooleAuth(false))
     setToken("")
     navigate("/login")
   };
@@ -65,7 +68,7 @@ const NavBar = () => {
     <div className="container md:px-12 px-3 py-2 bg-slate-800 text-white relative z-50">
       <nav className="flex justify-between items-center">
         <ul className="md:flex gap-3 hidden">
-          <NavLink to="/"><li className="text-xl font-medium hover:underline">Home</li></NavLink>
+          <NavLink to="/"><li className="text-xl font-medium hover:underline ">Home</li></NavLink>
           <NavLink to="/categories"><li className="text-xl font-medium hover:underline">Categories</li></NavLink>
           <NavLink to="/createtodo"><li className="text-xl font-medium hover:underline">Create Todos</li></NavLink>
           <NavLink to="/completedtodos"><li className="text-xl font-medium hover:underline">Completed Todos</li></NavLink>
@@ -91,7 +94,7 @@ const NavBar = () => {
               <NavLink to="/signup"><li className="text-yellow-500 font-bold">Sign Up</li></NavLink>
             </>
           )}
-          <div className="w-14 h-14 rounded-full bg-slate-400" onClick={()=>setShowEdit(!showEdit)} onMouseEnter={()=>setShowEdit(true)}>
+          <div className="w-14 h-14 rounded-full bg-slate-400" onClick={()=>setShowEdit(!showEdit)} >
           {(String(userDetails?.data?.profile_image).startsWith("https")) ? <img src={`${userDetails?.data?.profile_image}`} className="h-full w-full rounded-full" alt="User Avatar" /> : (userDetails?.data?.profile_image) ? <img src={`http://localhost:3000/${userDetails?.data?.profile_image}`} className="h-full w-full rounded-full" alt="User Avatar" /> :<img src="placeholder.jpg" className="h-full w-full rounded-full" alt="User Avatar" /> }
           </div>
         </ul>

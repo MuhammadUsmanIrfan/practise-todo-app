@@ -2,12 +2,12 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 
 const base_URL = import.meta.env.VITE_API_URL
 
-export const getAllCategoriesApi = createAsyncThunk("getAllCategories", async(token)=>{
-  const resp = await fetch(`${base_URL}category/getcategories?page=1&limit=20`, {
+export const getAllCategoriesApi = createAsyncThunk("getAllCategories", async(data)=>{
+  const resp = await fetch(`${base_URL}category/getcategories?page=${data.pageCount}&limit=3`, {
      method: 'GET',
      headers: {
        'Content-Type': 'application/json',
-       'Authorization': `Bearer ${token}`, 
+       'Authorization': `Bearer ${data.token}`, 
      },
    })
    return await resp.json()
@@ -57,7 +57,8 @@ const initialState = {
   editCategory: {},
   editCategoryBtn: false,
   PrevCategory: "",
-  category_name: ""
+  category_name: "",
+  checkCategoryIsExist: false
 }
 
 export const categoriesSlice = createSlice({
@@ -70,6 +71,12 @@ export const categoriesSlice = createSlice({
 
     builder.addCase(addCategoryApi.fulfilled, (state, action)=>{
       state.addCategory =action.payload
+      if(action.payload?.success ==  false)
+      {
+        state.checkCategoryIsExist = true
+      } else{
+        state.checkCategoryIsExist = false
+      }
     });
 
     builder.addCase(editCategoryApi.fulfilled, (state, action)=>{
