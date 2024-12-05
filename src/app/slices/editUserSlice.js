@@ -13,6 +13,7 @@ export const getQrCodeApi = createAsyncThunk("getQrCodeApi", async(fromdata)=>{
    })
    return await resp.json()
  })
+
 export const setUserAuth = createAsyncThunk("setUserAuth", async(fromdata)=>{
   const resp = await fetch(`${base_URL}setusergoogleauth`, {
      method: 'PATCH',
@@ -25,10 +26,38 @@ export const setUserAuth = createAsyncThunk("setUserAuth", async(fromdata)=>{
    return await resp.json()
  })
 
+export const editUserDetails = createAsyncThunk("editUserDetails", async(fromdata)=>{
+  const resp = await fetch(`${base_URL}edituserdetails`, {
+     method: 'PATCH',
+     headers: {
+      //  'Content-Type': 'application/json',
+       'Authorization': `Bearer ${fromdata.token}`, 
+     },
+     body: fromdata.data,
+    //  body:JSON.stringify({user_value: fromdata.data.user_value })
+   })
+   return await resp.json()
+ })
+
+export const changeUserPassowrd = createAsyncThunk("changeUserPassowrd", async(fromdata)=>{
+  const resp = await fetch(`${base_URL}changeuserpassowrd`, {
+     method: 'PATCH',
+     headers: {
+       'Content-Type': 'application/json',
+       'Authorization': `Bearer ${fromdata.token}`, 
+     },
+     body: JSON.stringify(fromdata.data),
+   
+   })
+   return await resp.json()
+ })
+
 const initialState = {
   qrCodeResponse: {},
   setUserAuthResponse : {},
-  userEditDetailsResponse: {}
+  userEditDetailsResponse: {},
+  toggleQrCode: false,
+  disableQrcode: false,
 }
   
 export const editUserSlice = createSlice({
@@ -41,8 +70,23 @@ export const editUserSlice = createSlice({
       state.qrCodeResponse = action.payload
     });
      builder.addCase(setUserAuth.fulfilled, (state, action)=>{
-      
+      if(action.payload.data.google_auth == false)
+      {
+        state.disableQrcode = true
+        state.toggleQrCode = false
+      } else{
+        state.disableQrcode = false
+        state.toggleQrCode = true
+      }
       state.setUserAuthResponse = action.payload
+    });
+     builder.addCase(editUserDetails.fulfilled, (state, action)=>{
+      
+      state.userEditDetailsResponse = action.payload
+    });
+     builder.addCase(changeUserPassowrd.fulfilled, (state, action)=>{
+      
+      state.userEditDetailsResponse = action.payload
     });
     
 },

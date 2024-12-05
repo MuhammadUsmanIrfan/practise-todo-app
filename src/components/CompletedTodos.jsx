@@ -1,10 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  resetToken,
-  jwtTokenValidation,
-} from "../app/slices/userValidateSlice.js";
+import { resetToken } from '../app/slices/LoginSlice';
+import { jwtTokenValidation,} from "../app/slices/userValidateSlice.js";
 import { getAllCategoriesApi } from "../app/slices/categoriesSlice.js";
 import {
   getAllTodosApi,
@@ -15,7 +13,7 @@ import {
 } from "../app/slices/TodoSlice.js";
 
 const CompletedTodos = () => {
-  const token = useSelector((state) => state.userValidateReducer.token);
+  const token = useSelector((state)=> (state.loginReducer.token ))
   const tokenValidateResponse = useSelector(
     (state) => state.userValidateReducer.tokenValidateResponse
   );
@@ -40,7 +38,12 @@ const CompletedTodos = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(jwtTokenValidation(token));
+    if(token)
+      {
+        dispatch(jwtTokenValidation(token))
+      }else{
+        navigate("/login")
+      }
   }, [token]);
 
   useEffect(() => {

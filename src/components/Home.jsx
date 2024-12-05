@@ -1,13 +1,20 @@
 import React, { useEffect, useState } from 'react'
 import { ImCross } from 'react-icons/im'
 import { TiTick } from 'react-icons/ti'
+import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import { jwtTokenValidation } from '../app/slices/userValidateSlice'
+
 
 const Home = () => {
   
-  const [userDetails, setUserDetails] = useState({})
-  const [token, setToken] = useState(localStorage.getItem("auth_token"))
-  const [loading, setLoading] = useState(true)
+  const tokenValidateResponse = useSelector((state)=> state.userValidateReducer.tokenValidateResponse)
+  const token = useSelector((state)=> (state.loginReducer.token ))
+  const userDetails = useSelector((state)=> state.NavBarReducer.userDetails)
+
+  // const [userDetails, setUserDetails] = useState({})
+  // const [token, setToken] = useState(localStorage.getItem("auth_token"))
+  // const [loading, setLoading] = useState(true)
   const [sendEmailState, setSendEmailState] = useState(false)
   const [userSmsOtp, setUserSmsOtp] = useState("")
   const [sendSmsState, setSendSmsState] = useState(false)
@@ -15,35 +22,27 @@ const Home = () => {
   const [verfiySmsResponse, setVerfiySmsResponse] = useState("")
 
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   useEffect(()=>{
-
-      
     if(token)
     {
-      const response = fetch("http://localhost:3000/validate", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`, 
-        },
-    }).then((response)=> response.json()).then((data)=>{
-      if(data.status == 200)
-      {
-        setUserDetails(data)
-        setLoading(false)
-      } else{
-        navigate("/login")
-      }
-    }).catch((err)=>{
-      setLoading(true)
-      console.log(err)
-    });
-    } else{
+      dispatch(jwtTokenValidation(token))
+    }else{
       navigate("/login")
     }
-   
-  },[verfiySmsState,verfiySmsResponse])
+  },[token,verfiySmsState,verfiySmsResponse])
+  useEffect(() => {
+    
+    if(tokenValidateResponse?.error?.status == 400 || tokenValidateResponse.success === false)
+      {
+         navigate("/login")
+         dispatch(resetToken())
+        // dispatch(setCheckGooleAuth(false))
+      }
+    
+  }, [token,verfiySmsState,verfiySmsResponse]);
+
 
   const handleEmailVerfication = ()=>{
       

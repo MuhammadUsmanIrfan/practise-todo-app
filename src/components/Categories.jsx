@@ -2,12 +2,14 @@ import React, { useEffect, useState} from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom' 
 import { useSelector, useDispatch } from 'react-redux'
-import { resetToken, jwtTokenValidation } from '../app/slices/userValidateSlice'
+import {  jwtTokenValidation } from '../app/slices/userValidateSlice'
+// import { resetToken, jwtTokenValidation } from '../app/slices/userValidateSlice'
+import { resetToken } from '../app/slices/LoginSlice';
 import { setEditCategoryBtn,setPrevCategory,setcategory_name, getAllCategoriesApi , addCategoryApi, editCategoryApi, deleteCategoryApi} from '../app/slices/categoriesSlice'
 
 const Categories = () => {
   
-  const token = useSelector((state)=> (state.userValidateReducer.token ))
+  const token = useSelector((state)=> (state.loginReducer.token ))
   const tokenValidateResponse = useSelector((state)=> state.userValidateReducer.tokenValidateResponse)
   const getCategories = useSelector((state)=> state.categoriesReducer.getCategories)
   const addCategory = useSelector((state)=> state.categoriesReducer.addCategory)
@@ -34,7 +36,12 @@ const Categories = () => {
 
   useEffect(()=>{
     
-    dispatch(jwtTokenValidation(token))
+    if(token)
+      {
+        dispatch(jwtTokenValidation(token))
+      }else{
+        navigate("/login")
+      }
   },[ token])
 
   useEffect(() => {

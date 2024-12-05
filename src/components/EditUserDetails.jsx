@@ -2,14 +2,17 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  resetToken,
-  jwtTokenValidation,
-} from "../app/slices/userValidateSlice.js";
+import { resetToken } from '../app/slices/LoginSlice';
+import { jwtTokenValidation,} from "../app/slices/userValidateSlice.js";
+// import {
+//   resetToken,
+//   jwtTokenValidation,
+// } from "../app/slices/userValidateSlice.js";
 import { getQrCodeApi,setUserAuth,setUserEditDetailsResponse } from "../app/slices/editUserSlice.js";
+import { editUserDetails,changeUserPassowrd } from "../app/slices/editUserSlice.js";
 
 const EditUserDetails = () => {
-  const token = useSelector((state) => state.userValidateReducer.token);
+  const token = useSelector((state)=> (state.loginReducer.token ));
   const userEditDetailsResponse = useSelector((state) => state.editUserReducer.userEditDetailsResponse);
   const tokenValidateResponse = useSelector(
     (state) => state.userValidateReducer.tokenValidateResponse
@@ -20,17 +23,23 @@ const EditUserDetails = () => {
   const setUserAuthResponse = useSelector(
     (state) => state.editUserReducer.setUserAuthResponse
   );
+  const toggleQrCode = useSelector(
+    (state) => state.editUserReducer.toggleQrCode
+  );
+  const disableQrcode = useSelector(
+    (state) => state.editUserReducer.disableQrcode
+  );
   
 
 
   const [userDetails, setUserDetails] = useState({});
-  // const [token, setToken] = useState(localStorage.getItem("auth_token"));
+  
 
   const [toggleChangPassord, setToggleChangPassord] = useState(false);
-  const [toggleQrCode, setToggleQrCode] = useState(false);
+  // const [toggleQrCode, setToggleQrCode] = useState(false);
   const [checkPassword, setCheckPassword] = useState(false);
   const [checkOldPassword, setCheckOldPassword] = useState(false);
-  // const [userEditDetailsResponse, setUserEditDetailsResponse] = useState({});
+  
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -43,13 +52,15 @@ const EditUserDetails = () => {
   } = useForm();
 
   useEffect(() => {
-    dispatch(jwtTokenValidation(token));
+    if(token)
+      {
+        dispatch(jwtTokenValidation(token))
+      }else{
+        navigate("/login")
+      }
   }, [token]);
 
   useEffect(() => {
-    // console.log(tokenValidateResponse)
-    // console.log(tokenValidateResponse?.error?.status == 400 ||
-    //   tokenValidateResponse?.success === false)
     if (
       tokenValidateResponse?.error?.status == 400 ||
       tokenValidateResponse?.success === false
@@ -61,39 +72,29 @@ const EditUserDetails = () => {
       
       setUserDetails(tokenValidateResponse);
     }
-  }, [tokenValidateResponse,userDetails]);
+  }, [tokenValidateResponse,userDetails,userEditDetailsResponse]);
 
 
 
   const handleForm = async (data) => {
     const formData = new FormData();
 
-    // formData.append("first_name", data["first_name"]);
     formData.append("first_name", data.first_name ? data.first_name : "");
-    // formData.append("last_name", data["last_name"]);
     formData.append("last_name", data.last_name ? data.last_name : "");
     formData.append("number", data.number ? data.number : "");
-    // formData.append("number", data.number ? data.number : "");
     formData.append("file", data.file[0] ? data.file[0] : null);
 
     if (token) {
-      const userSubmitData = await fetch(
-        "http://localhost:3000/edituserdetails",
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
+      const updateData = {
+        token,
+        data : formData
+      }
 
-      dispatch(setUserEditDetailsResponse (await userSubmitData.json()))
+      dispatch(editUserDetails(updateData))     
       setUserDetails(userEditDetailsResponse)
-      // if (userEditDetailsResponse.status == 201) {
-        // location.reload();
-      // }
+     
     } else {
+      dispatch(resetToken())
       navigate("/login");
     }
   };
@@ -101,35 +102,26 @@ const EditUserDetails = () => {
   const handleChangePassword = async (data) => {
     if (data.new_password == data.r_password) {
       setCheckPassword(false);
-      const formData = {
-        old_password: data.old_password,
-        new_password: data.new_password,
-      };
-
       if (token) {
-        const userSubmitData = await fetch(
-          "http://localhost:3000/changeuserpassowrd",
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(formData),
+        const formdata = {
+          token,
+          data:{
+            old_password: data.old_password,
+            new_password: data.new_password,
           }
-        );
-        const userEditDetailsResponse = await userSubmitData.json();
+        }
 
-        console.log("get change pass status --",userEditDetailsResponse?.status)
+        dispatch(changeUserPassowrd(formdata))
+
         if (userEditDetailsResponse?.status == 200) {
+          dispatch(resetToken())
           navigate("/login");
-          dispatch(setUserEditDetailsResponse(userEditDetailsResponse))
-          localStorage.setItem("auth_token", "")
+        
         } else {
           setCheckOldPassword(true);
         }
       } else {
-        
+        dispatch(resetToken())
         navigate("/login");
       }
     } else {
@@ -152,10 +144,10 @@ const EditUserDetails = () => {
     dispatch(getQrCodeApi(fromdata))
     dispatch(setUserAuth(fromdata2))
   
-    if(qrCodeResponse?.status == 200)
-    {
-      setToggleQrCode(true)
-    }
+    // if(qrCodeResponse?.status == 200)
+    // {
+    //   setToggleQrCode(true)
+    // }
   }
 
   const handleDisableGoogleAuth = (event)=>{
@@ -168,7 +160,7 @@ const EditUserDetails = () => {
       }
     }
     dispatch(setUserAuth(fromdata))
-    setToggleQrCode(false)
+    // setToggleQrCode(false)
   }
 
   
@@ -393,6 +385,7 @@ const EditUserDetails = () => {
                  Disable Google Auth and get QR code
                 </button>
               </div>
+               {disableQrcode &&  <p className="text-white font-medium text-xl">Google Auth is successfully disabled</p>}
               <hr />
               <div className="flex justify-center mt-6">
                 <button

@@ -2,10 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  resetToken,
-  jwtTokenValidation,
-} from "../app/slices/userValidateSlice.js";
+import { resetToken } from '../app/slices/LoginSlice';
+import { jwtTokenValidation,} from "../app/slices/userValidateSlice.js";
+// import { resetToken,jwtTokenValidation,} from "../app/slices/userValidateSlice.js";
 import { getAllCategoriesApi } from "../app/slices/categoriesSlice.js";
 import {
   setTodoInput,
@@ -22,7 +21,7 @@ import {
 } from "../app/slices/TodoSlice.js";
 
 const Todo = () => {
-  const token = useSelector((state) => state.userValidateReducer.token);
+  const token = useSelector((state)=> (state.loginReducer.token ))
   const tokenValidateResponse = useSelector(
     (state) => state.userValidateReducer.tokenValidateResponse
   );
@@ -57,7 +56,12 @@ const Todo = () => {
   // RTK Logic----------
 
   useEffect(() => {
-    dispatch(jwtTokenValidation(token));
+    if(token)
+      {
+        dispatch(jwtTokenValidation(token))
+      }else{
+        navigate("/login")
+      }
   }, [token]);
 
   useEffect(() => {
@@ -150,6 +154,7 @@ const Todo = () => {
         },
       };
       dispatch(editTodoApi(formData));
+      dispatch(setTodoInput(""))
     } else {
       navigate("/login");
     }

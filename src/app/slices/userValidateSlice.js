@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+const base_URL = import.meta.env.VITE_API_URL
+
 
 export const jwtTokenValidation = createAsyncThunk("jwtTokenValidation", async(token)=>{
- const resp = await fetch("http://localhost:3000/validate", {
+ const resp = await fetch(`${base_URL}validate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -12,7 +14,8 @@ return await resp.json()
 })
 
 const initialState = {
-  token: [localStorage.getItem("auth_token")],
+  // token: "",
+  // token: localStorage.getItem("auth_token"),
   tokenValidateResponse : "",
 }
 
@@ -23,26 +26,37 @@ export const userValidateSlice = createSlice({
   extraReducers:(builder)=>{
     
       builder.addCase(jwtTokenValidation.fulfilled, (state, action)=>{
+        
         state.tokenValidateResponse = action.payload
-        state.token = localStorage.getItem("auth_token")
+        
+        if(action.payload.success == false)
+          {
+          state.tokenValidateResponse = {}
+          localStorage.getItem("auth_token")
+          }
       });
       builder.addCase(jwtTokenValidation.rejected, (state, action)=>{
+
         state.tokenValidateResponse = action.payload
-        state.token = localStorage.setItem("auth_token", "")
+        // state.token = localStorage.setItem("auth_token", "")
+        localStorage.setItem("auth_token", "")
       })      
   },
   reducers: {
-    setToken:  (state, action) => {
-      state.token  = localStorage.getItem("auth_token")
-    },
-    resetToken:  (state, action) => {
-      state.token  = ""
-      localStorage.setItem("auth_token", "")
-    },
+    // setToken:  (state, action) => {
+    //   state.token  = action.payload
+    //   localStorage.setItem("auth_token", state.token)
+    // },
+    // resetToken:  (state, action) => {
+    //   console.log("resset token runs, state.token=>",state.token)
+    //   state.token  = ""
+    //   localStorage.setItem("auth_token", "")
+    // },
     
   },
 })
 
-export const { setUserValidateResponse, setToken, resetToken} = userValidateSlice.actions
+// export const { } = userValidateSlice.actions
+export const { setToken, resetToken} = userValidateSlice.actions
 
 export default userValidateSlice.reducer
