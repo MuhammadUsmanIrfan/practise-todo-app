@@ -29,29 +29,20 @@ export const userValidateSlice = createSlice({
         
         state.tokenValidateResponse = action.payload
         
-        if(action.payload.success == false)
-          {
-          state.tokenValidateResponse = {}
-          localStorage.getItem("auth_token")
-          }
+        // if(action.payload.success == false)
+          // {
+          // state.tokenValidateResponse = {}
+          // localStorage.removeItem("auth_token")
+          // }
       });
       builder.addCase(jwtTokenValidation.rejected, (state, action)=>{
 
         state.tokenValidateResponse = action.payload
         // state.token = localStorage.setItem("auth_token", "")
-        localStorage.setItem("auth_token", "")
+        // localStorage.setItem("auth_token", "")
       })      
   },
   reducers: {
-    // setToken:  (state, action) => {
-    //   state.token  = action.payload
-    //   localStorage.setItem("auth_token", state.token)
-    // },
-    // resetToken:  (state, action) => {
-    //   console.log("resset token runs, state.token=>",state.token)
-    //   state.token  = ""
-    //   localStorage.setItem("auth_token", "")
-    // },
     
   },
 })

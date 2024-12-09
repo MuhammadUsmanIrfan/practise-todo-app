@@ -1,17 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { resetToken } from '../app/slices/LoginSlice';
 import { jwtTokenValidation,} from "../app/slices/userValidateSlice.js";
-// import {
-//   resetToken,
-//   jwtTokenValidation,
-// } from "../app/slices/userValidateSlice.js";
-import { getQrCodeApi,setUserAuth,setUserEditDetailsResponse } from "../app/slices/editUserSlice.js";
+import { getQrCodeApi,setUserAuth,setUserEditDetailsResponse,setFirstNameStatus,setLastNameStatus,setMobileNumStatus,setPasswordStatus,setSelectedCountry } from "../app/slices/editUserSlice.js";
 import { editUserDetails,changeUserPassowrd } from "../app/slices/editUserSlice.js";
+import Select from "react-select";
+import countryList from "react-select-country-list";
+import { getCountryCallingCode } from "libphonenumber-js";
+import { toast } from "react-toastify";
 
 const EditUserDetails = () => {
+
+  const editUserReducer = useSelector(
+    (state) => state.editUserReducer
+  );
+
   const token = useSelector((state)=> (state.loginReducer.token ));
   const userEditDetailsResponse = useSelector((state) => state.editUserReducer.userEditDetailsResponse);
   const tokenValidateResponse = useSelector(
@@ -58,7 +63,8 @@ const EditUserDetails = () => {
       }else{
         navigate("/login")
       }
-  }, [token]);
+  }, [token,editUserReducer.firstNameStatus, editUserReducer.lastNameStatus, editUserReducer.passwordStatus,editUserReducer.selectedCountry,editUserReducer.mobileNumStatus]);
+
 
   useEffect(() => {
     if (
@@ -71,33 +77,149 @@ const EditUserDetails = () => {
     } else{
       
       setUserDetails(tokenValidateResponse);
+      if(disableQrcode)
+        {
+          toast.success("Google Auth is successfully disabled",{
+            position: "bottom-left"
+          })
+        }
+
     }
-  }, [tokenValidateResponse,userDetails,userEditDetailsResponse]);
+  }, [tokenValidateResponse,userDetails,userEditDetailsResponse,disableQrcode, editUserReducer.firstNameStatus, editUserReducer.lastNameStatus, editUserReducer.passwordStatus,editUserReducer.selectedCountry,editUserReducer.mobileNumStatus]);
+
+ const countries = useMemo(() => {
+    const countryData = countryList().getData(); 
+    
+    return countryData.map((country) => {
+        try {
+          const dialingCode = getCountryCallingCode(country.value); 
+          return {
+            value: `+${dialingCode}`, 
+            label: `${country.label} (${dialingCode})`, 
+          };
+        } catch (error) {
+          return null;
+        }
+      })
+      .filter((option) => option !== null); 
+  }, []);
 
 
 
   const handleForm = async (data) => {
-    const formData = new FormData();
 
-    formData.append("first_name", data.first_name ? data.first_name : "");
-    formData.append("last_name", data.last_name ? data.last_name : "");
-    formData.append("number", data.number ? data.number : "");
-    formData.append("file", data.file[0] ? data.file[0] : null);
+    const validationStatus = {
+      firstNameStatus: false,
+      lastNameStatus: false,
+      mobileNumStatus: false,
+    };
 
-    if (token) {
-      const updateData = {
-        token,
-        data : formData
+    if( data?.first_name){
+      if( data?.first_name.length <= 2)
+        {
+          validationStatus.firstNameStatus = true;
+          dispatch(setFirstNameStatus(true))
+        } else{
+          validationStatus.firstNameStatus = false;
+          dispatch(setFirstNameStatus(false))
+        }
       }
 
-      dispatch(editUserDetails(updateData))     
-      setUserDetails(userEditDetailsResponse)
-     
-    } else {
-      dispatch(resetToken())
-      navigate("/login");
-    }
+      if( data?.last_name){
+        if( data?.last_name.length <= 2)
+          {
+            validationStatus.lastNameStatus = true;
+            dispatch(setLastNameStatus(true))
+          } else{
+            validationStatus.lastNameStatus = false;
+            dispatch(setLastNameStatus(false))
+          }
+        }
+
+        if(data?.phone_num)
+          {
+            if( data?.phone_num.length != 10)
+              {
+                validationStatus.mobileNumStatus = true;
+                dispatch(setMobileNumStatus(true))
+              } else{
+                validationStatus.mobileNumStatus = false;
+                dispatch(setMobileNumStatus(false))
+              }
+          }
+
+          if(!validationStatus.firstNameStatus &&
+             !validationStatus.lastNameStatus &&
+             !validationStatus.mobileNumStatus)
+             {
+              
+              validationStatus.firstNameStatus = false 
+              validationStatus.lastNameStatus = false
+              validationStatus.mobileNumStatus = false
+              dispatch(setFirstNameStatus(false))
+              dispatch(setLastNameStatus(false))
+              dispatch(setMobileNumStatus(false))
+
+              let complete_num = null   
+              console.log("checking number condition-->", editUserReducer?.selectedCountry?.value && data?.phone_num)
+              if(editUserReducer?.selectedCountry?.value && data?.phone_num)
+              {     
+                const country_code = String(editUserReducer.selectedCountry.value)
+                const phone_num = String(data?.phone_num)
+                complete_num =  Number(country_code.concat(phone_num))
+              }
+            const formData = new FormData();
+            // formData.append('first_name',  data.first_name ? data.first_name : "");
+            // formData.append('last_name', data.last_name ? data.last_name : "");
+            // formData.append('file', (data.file[0])?data.file[0]:null);  
+            // formData.append('number', (complete_num)? complete_num: 0);
+            
+            formData.append("first_name", data.first_name ? data.first_name : "");
+            formData.append("last_name", data.last_name ? data.last_name : "");
+            formData.append("file", data.file[0] ? data.file[0] : "");
+            formData.append('number', (complete_num)? complete_num: 0);
+
+            console.log(formData)
+            if (token) {
+              const updateData = {
+                token,
+                data : formData
+              }
+
+              try {
+                await dispatch(editUserDetails(updateData)).unwrap()     
+                setUserDetails(userEditDetailsResponse)
+                
+                if(userEditDetailsResponse?.status==200)
+                  {
+                    toast.success("user details update successfully!",{
+                      position: "bottom-left"
+                    });
+                  }
+               
+              } catch (error) {
+                toast.error("Failed to update user details",{
+                  position: "bottom-left"
+                });
+              }
+            
+
+            
+            } else {
+              dispatch(resetToken())
+              navigate("/login");
+            }
+              
+            }
+
+    
   };
+
+
+  const handleChange = (selectedOption) => {
+    dispatch(setSelectedCountry(selectedOption));
+  };
+
 
   const handleChangePassword = async (data) => {
     if (data.new_password == data.r_password) {
@@ -144,13 +266,9 @@ const EditUserDetails = () => {
     dispatch(getQrCodeApi(fromdata))
     dispatch(setUserAuth(fromdata2))
   
-    // if(qrCodeResponse?.status == 200)
-    // {
-    //   setToggleQrCode(true)
-    // }
   }
 
-  const handleDisableGoogleAuth = (event)=>{
+  const handleDisableGoogleAuth =async (event)=>{
     event.preventDefault()
 
     const fromdata = {
@@ -159,6 +277,7 @@ const EditUserDetails = () => {
         user_value: false
       }
     }
+   
     dispatch(setUserAuth(fromdata))
     // setToggleQrCode(false)
   }
@@ -315,6 +434,7 @@ const EditUserDetails = () => {
                     {...register("first_name")}
                     className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light"
                   />
+                  {(editUserReducer.firstNameStatus) && <p className='text-red-900'>**First name length sould be greater than 2**</p>}
                 </div>
 
                 <div className="mb-5">
@@ -331,6 +451,7 @@ const EditUserDetails = () => {
                     {...register("last_name")}
                     className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light"
                   />
+                  {(editUserReducer.lastNameStatus) && <p className='text-red-900'>**last name length sould be greater than 2**</p>}
                 </div>
               </div>
 
@@ -343,13 +464,20 @@ const EditUserDetails = () => {
                   >
                     Enter your Mobile Number
                   </label>
-                  <input
-                    type="number"
-                    id="phone_num"
-                    name="phone_num"
-                    {...register("number")}
-                    className="no-spinner shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light"
-                  />
+                  <div className='phone-num-container flex gap-2 items-center'>          
+                    <div className='select-country-container grow'>
+                      <Select options={countries} onChange={handleChange} />
+                    </div>
+
+                      <input
+                        type="number"
+                        id="phone_num"
+                        name="phone_num"
+                        {...register("phone_num")}
+                        className="no-spinner shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-[60%]  p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light"
+                      />
+                  </div>
+                  {(editUserReducer.mobileNumStatus) && <p className='text-red-900'>**Phone_num length must be 10**</p>}
                 </div>
               ) : null}
 
@@ -385,7 +513,7 @@ const EditUserDetails = () => {
                  Disable Google Auth and get QR code
                 </button>
               </div>
-               {disableQrcode &&  <p className="text-white font-medium text-xl">Google Auth is successfully disabled</p>}
+               
               <hr />
               <div className="flex justify-center mt-6">
                 <button

@@ -13,6 +13,17 @@ export const getAllCategoriesApi = createAsyncThunk("getAllCategories", async(da
    return await resp.json()
  })
 
+export const getCategoriesFullListApi = createAsyncThunk("getCategoriesFullListApi", async(data)=>{
+  const resp = await fetch(`${base_URL}category/getallcategories`, {
+     method: 'GET',
+     headers: {
+       'Content-Type': 'application/json',
+       'Authorization': `Bearer ${data.token}`, 
+     },
+   })
+   return await resp.json()
+ })
+
 export const addCategoryApi = createAsyncThunk("addCategoryApi", async(fromdata)=>{
   const resp = await fetch(`${base_URL}category/addcategory`, {
      method: 'POST',
@@ -58,7 +69,8 @@ const initialState = {
   editCategoryBtn: false,
   PrevCategory: "",
   category_name: "",
-  checkCategoryIsExist: false
+  checkCategoryIsExist: false,
+  getCategoriesFullList : []
 }
 
 export const categoriesSlice = createSlice({
@@ -67,6 +79,12 @@ export const categoriesSlice = createSlice({
   extraReducers:(builder)=>{
     builder.addCase(getAllCategoriesApi.fulfilled, (state, action)=>{
       state.getCategories = action.payload 
+    });
+    builder.addCase(getCategoriesFullListApi.fulfilled, (state, action)=>{
+      if(action.payload.status == 200)
+      {
+        state.getCategoriesFullList = action.payload 
+      }
     });
 
     builder.addCase(addCategoryApi.fulfilled, (state, action)=>{

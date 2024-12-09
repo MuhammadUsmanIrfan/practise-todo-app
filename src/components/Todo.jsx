@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { resetToken } from '../app/slices/LoginSlice';
 import { jwtTokenValidation,} from "../app/slices/userValidateSlice.js";
 // import { resetToken,jwtTokenValidation,} from "../app/slices/userValidateSlice.js";
-import { getAllCategoriesApi } from "../app/slices/categoriesSlice.js";
+import { getCategoriesFullListApi} from "../app/slices/categoriesSlice.js";
 import {
   setTodoInput,
   setUpdateTodoStatus,
@@ -28,8 +28,11 @@ const Todo = () => {
 
   const searchTodoResponse = useSelector((state) => state.todoReducer.searchTodoResponse);
   const getCategories = useSelector(
-    (state) => state.categoriesReducer.getCategories
+    (state) => state.categoriesReducer.getCategoriesFullList
   );
+  // const getCategories = useSelector(
+  //   (state) => state.categoriesReducer.getCategories
+  // );
   const todoResponse = useSelector((state) => state.todoReducer.todoResponse);
   const getTodos = useSelector((state) => state.todoReducer.getTodos);
   const selectedOption = useSelector(
@@ -72,7 +75,8 @@ const Todo = () => {
       dispatch(resetToken());
       navigate("/login");
     } else {
-      dispatch(getAllCategoriesApi({token, pageCount:pageCount}));
+      dispatch(getCategoriesFullListApi({token}));
+      // dispatch(getAllCategoriesApi({token, pageCount:pageCount}));
       dispatch(getAllTodosApi({token, todoPageCount}));
     }
   }, [tokenValidateResponse, todoResponse, deleteTodo, completeTodo,pageCount,todoPageCount,searchTodoResponse]);
@@ -159,27 +163,27 @@ const Todo = () => {
       navigate("/login");
     }
   };
-  const handlePrev = ()=>{
-    if(pageCount <= 1)
-    {
-      setPageCount(1)
-    }else
-    {
+  // const handlePrev = ()=>{
+  //   if(pageCount <= 1)
+  //   {
+  //     setPageCount(1)
+  //   }else
+  //   {
 
-      setPageCount(pageCount -1)
-    }
-  }
+  //     setPageCount(pageCount -1)
+  //   }
+  // }
 
-  const handleNext = ()=>{
+  // const handleNext = ()=>{
 
-     if(pageCount >= getCategories?.data?.nbPages)
-    {
-      setPageCount(1)
-    }else
-    {
-      setPageCount(pageCount + 1)
-    }
-  }
+  //    if(pageCount >= getCategories?.data?.nbPages)
+  //   {
+  //     setPageCount(1)
+  //   }else
+  //   {
+  //     setPageCount(pageCount + 1)
+  //   }
+  // }
 
   const handleTodoPrev = ()=>{
     if(todoPageCount <= 1)
@@ -199,9 +203,13 @@ const Todo = () => {
       setTodoPageCount(1)
     }else
     {
-      setTodoPageCount(todoPageCount + 1)
+      if(getTodos?.data?.nbPages)
+      {
+        setTodoPageCount(todoPageCount + 1)
+      }
     }
   }
+
   const handleSearch = () => { 
     dispatch(searchTodosApi({token, search_todo: searchTodo}))
     setSearchTodo("")
@@ -215,11 +223,11 @@ const Todo = () => {
     <>
       <div className="container px-4 py-4 md:py-12 md:px-12  min-h-[calc(100vh-4.5rem)] w-[100%] bg-slate-600 ">
         <h1 className="text-center text-4xl font-bold text-white">Todo Page</h1>
-        <div className='flex justify-center items-center gap-3 my-12'>
+       {/* <div className='flex justify-center items-center gap-3 my-12'>
                     <button className='bg-slate-800 min-w-fit px-3 rounded-md text-white font-medium text-xl hover:bg-slate-900 py-2' onClick={handlePrev}>Prev</button>
                     <p className='text-white text-xl font-medium'>{pageCount} of {getCategories?.data?.nbPages}</p>
                     <button className='bg-slate-800 min-w-fit px-3 rounded-md text-white font-medium text-xl hover:bg-slate-900 py-2' onClick={handleNext}>Next</button>
-        </div>
+        </div> */}
         <div className="px-[45%] mt-10">
           <select
             name="language"
@@ -229,7 +237,7 @@ const Todo = () => {
             ref={selectedOptionRef}
             required
           >
-            {getCategories?.data?.getCategory?.map((item) =>
+            {getCategories?.data?.totalCategories?.map((item) =>
               item.is_deleted != true ? (
                 <option value={item?.category_name} key={item._id}>
                   {item?.category_name}
@@ -272,6 +280,11 @@ const Todo = () => {
               </div>
             )}
           </div>
+          {getCategories?.data?.totalCategories?.every((item) => item.is_deleted == true) && (
+          <p className="text-red-600 my-3 text-center font-bold text-xl">
+            **Please create categorie first**
+          </p>
+        )}
         </form>
         <hr />
         
@@ -283,8 +296,10 @@ const Todo = () => {
         </div>
 
         <div className="categories mt-10">
-          <ul className="flex flex-wrap gap-4 ">
-            {searchTodoResponse?.data?.getTodos?.map((item) =>
+          <ul className="flex flex-wrap gap-4 mb-8 justify-center">
+            {
+            ( searchTodoResponse?.data?.getTodos.length == 0)? <p className="text-center text-xl text-white">No data found</p> :
+            searchTodoResponse?.data?.getTodos?.map((item) =>
               item.is_completed == false ? (
                 <div
                   key={item._id}
@@ -314,18 +329,14 @@ const Todo = () => {
                     onChange={(event) => handleComplete(event, item._id)}
                   />
                 </div>
-              ) : null
+              ) :  null
             )}
           </ul>
         </div>
 
 
         <hr />
-        {getCategories?.data?.getCategory?.every((item) => item.is_deleted == true) && (
-          <p className="text-red-700 my-3 text-center font-bold">
-            **Please create categorie first**
-          </p>
-        )}
+       
 
         <div className="categories mt-10">
           <ul className="flex flex-wrap gap-4 ">
@@ -365,7 +376,7 @@ const Todo = () => {
         </div>
         <div className='flex justify-center items-center gap-3 my-12'>
                     <button className='bg-slate-800 min-w-fit px-3 rounded-md text-white font-medium text-xl hover:bg-slate-900 py-2' onClick={handleTodoPrev}>Prev</button>
-                    <p className='text-white text-xl font-medium'>{todoPageCount} of {getTodos?.data?.nbPages}</p>
+                    <p className='text-white text-xl font-medium'>{todoPageCount} of {(getTodos?.data?.nbPages) ? getTodos?.data?.nbPages : 1}</p>
                     <button className='bg-slate-800 min-w-fit px-3 rounded-md text-white font-medium text-xl hover:bg-slate-900 py-2' onClick={handleTodoNext}>Next</button>
                 </div>
       </div>

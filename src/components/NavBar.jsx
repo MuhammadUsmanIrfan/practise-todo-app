@@ -4,9 +4,7 @@ import { NavLink } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux'
 import { jwtTokenValidation} from '../app/slices/userValidateSlice';
-// import {  setToken, resetToken} from '../app/slices/userValidateSlice';
-// import { jwtTokenValidation} from '../app/slices/NavBarSlice';
-import { resetToken, setCheckGooleAuthLogin } from '../app/slices/LoginSlice';
+import { resetToken, setCheckGooleAuthLogin,setEmail,setIsEmailPasswordWrong, setPassword} from '../app/slices/LoginSlice';
 import { setCheckGooleAuth } from '../app/slices/LoginSlice';
 import { setToggle, setShowEdit, setUserDetails } from '../app/slices/NavBarSlice';
 
@@ -33,43 +31,30 @@ const NavBar = () => {
   
 
   useEffect(()=>{
-    // console.log("Token in Navbar=> ", token)
-    // dispatch(setToken(userLoginResponse.auth_token ))
+   
     dispatch(jwtTokenValidation(token))
-  },[userLoginResponse, token,userEditDetailsResponse])
+  },[token,userLoginResponse,userEditDetailsResponse])
+  // },[userLoginResponse, token,userEditDetailsResponse])
  
  
 
   useEffect(() => {
-    // console.log("tokenValidateResponse => ",tokenValidateResponse)
+    
     if(tokenValidateResponse?.error?.status == 400 || tokenValidateResponse.success === false)
       {
+        // navigate("/login")
         // dispatch(resetToken())
-        navigate("/login")
         // dispatch(setCheckGooleAuth(false))
-      }else{ 
-
-        // if(tokenValidateResponse?.data?.google_auth)
-        // {
-        //   dispatch(setCheckGooleAuth(true))
-        // } else{
-        //   dispatch(setCheckGooleAuth(false))
-        // }
-        // if(checkGooleAuthLogin)
-        // {
-        //   dispatch(setUserDetails(tokenValidateResponse))
-          
-        // }else { 
-
-        //   dispatch(setUserDetails({}))
-        // }
-
       }
     
   }, [userEditDetailsResponse,userDetails,checkGooleAuth,token,tokenValidateResponse]);
 
   const handleLogout = () => {
     dispatch(resetToken())
+    dispatch(setIsEmailPasswordWrong(false))
+    dispatch(setEmail(""))
+    dispatch(setPassword(""))
+    dispatch(setShowEdit(false))
   };
 
   const mobileMenu = (
@@ -118,15 +103,17 @@ const NavBar = () => {
               <NavLink to="/signup"><li className="text-yellow-500 font-bold">Sign Up</li></NavLink>
             </>
           )}
-           {checkGooleAuthLogin &&
+           {(checkGooleAuthLogin && token) && 
           <div className="w-14 h-14 rounded-full bg-slate-400" onClick={()=>dispatch(setShowEdit())} >
           {(String(userDetails?.data?.profile_image).startsWith("https")) ? <img src={`${userDetails?.data?.profile_image}`} className="h-full w-full rounded-full" alt="User Avatar" /> : (userDetails?.data?.profile_image) ? <img src={`http://localhost:3000/${userDetails?.data?.profile_image}`} className="h-full w-full rounded-full" alt="User Avatar" /> :<img src="placeholder.jpg" className="h-full w-full rounded-full" alt="User Avatar" /> }
           </div>
           }
         </ul>
-          {showEdit && <div className='w-fit absolute top-16 right-7 bg-slate-800 rounded-lg py-2 px-2'>
+          {checkGooleAuthLogin &&
+          showEdit && <div className='w-fit absolute top-16 right-7 bg-slate-800 rounded-lg py-2 px-2'>
           <NavLink to="/edit"><li className="text-white font-bold list-none text-center cursor-pointer hover:underline">Edit details</li></NavLink>
-          </div>}
+          </div>
+          }
       </nav>
     </div>
   );

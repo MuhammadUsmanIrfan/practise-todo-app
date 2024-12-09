@@ -4,6 +4,8 @@ import { TiTick } from 'react-icons/ti'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { jwtTokenValidation } from '../app/slices/userValidateSlice'
+// import { resetToken } from '../app/slices/LoginSlice'
+
 
 
 const Home = () => {
@@ -12,9 +14,7 @@ const Home = () => {
   const token = useSelector((state)=> (state.loginReducer.token ))
   const userDetails = useSelector((state)=> state.NavBarReducer.userDetails)
 
-  // const [userDetails, setUserDetails] = useState({})
-  // const [token, setToken] = useState(localStorage.getItem("auth_token"))
-  // const [loading, setLoading] = useState(true)
+  
   const [sendEmailState, setSendEmailState] = useState(false)
   const [userSmsOtp, setUserSmsOtp] = useState("")
   const [sendSmsState, setSendSmsState] = useState(false)
@@ -25,21 +25,19 @@ const Home = () => {
   const dispatch = useDispatch()
 
   useEffect(()=>{
+
     if(token)
     {
       dispatch(jwtTokenValidation(token))
-    }else{
+    }
+    else{
       navigate("/login")
     }
   },[token,verfiySmsState,verfiySmsResponse])
+  
   useEffect(() => {
     
-    if(tokenValidateResponse?.error?.status == 400 || tokenValidateResponse.success === false)
-      {
-         navigate("/login")
-         dispatch(resetToken())
-        // dispatch(setCheckGooleAuth(false))
-      }
+  
     
   }, [token,verfiySmsState,verfiySmsResponse]);
 

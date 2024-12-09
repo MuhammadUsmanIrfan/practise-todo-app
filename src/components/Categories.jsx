@@ -130,7 +130,10 @@ const Categories = () => {
       setPageCount(1)
     }else
     {
-      setPageCount(pageCount + 1)
+      if(getCategories?.data?.nbPages)
+      {
+        setPageCount(pageCount + 1)
+      }
     }
   }
 
@@ -190,7 +193,7 @@ const Categories = () => {
             </div>
                  <div className='flex justify-center items-center gap-3 mt-12'>
                     <button className='bg-slate-800 min-w-fit px-3 rounded-md text-white font-medium text-xl hover:bg-slate-900 py-2' onClick={handlePrev}>Prev</button>
-                    <p className='text-white text-xl font-medium'>{pageCount} of {getCategories?.data?.nbPages}</p>
+                    <p className='text-white text-xl font-medium'>{pageCount} of {(getCategories?.data?.nbPages)? getCategories?.data?.nbPages : 1}</p>
                     <button className='bg-slate-800 min-w-fit px-3 rounded-md text-white font-medium text-xl hover:bg-slate-900 py-2' onClick={handleNext}>Next</button>
                 </div>
       </div>

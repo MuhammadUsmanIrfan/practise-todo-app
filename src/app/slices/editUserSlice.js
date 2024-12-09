@@ -58,6 +58,13 @@ const initialState = {
   userEditDetailsResponse: {},
   toggleQrCode: false,
   disableQrcode: false,
+
+  firstNameStatus: false,
+  lastNameStatus:false,
+  mobileNumStatus:false,
+  passwordStatus:false,
+  selectedCountry:{}
+
 }
   
 export const editUserSlice = createSlice({
@@ -98,10 +105,24 @@ export const editUserSlice = createSlice({
     setUserEditDetailsResponse: (state , action) => {   
       state.userEditDetailsResponse = action.payload
     },
-    
+    setFirstNameStatus: (state, action)=>{
+      state.firstNameStatus = action.payload
+    },
+    setLastNameStatus: (state, action)=>{
+      state.lastNameStatus = action.payload
+    },
+    setMobileNumStatus: (state, action)=>{
+      state.mobileNumStatus = action.payload
+    },
+    setPasswordStatus: (state, action)=>{
+      state.passwordStatus = action.payload
+    },
+    setSelectedCountry: (state, action)=>{
+      state.selectedCountry = action.payload
+    },
   },
 })
 
-export const {setUserEditDetailsResponse } = editUserSlice.actions
+export const {setUserEditDetailsResponse,setFirstNameStatus,setLastNameStatus,setMobileNumStatus,setPasswordStatus,setSelectedCountry } = editUserSlice.actions
 
 export default editUserSlice.reducer

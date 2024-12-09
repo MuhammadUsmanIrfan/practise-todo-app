@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { resetToken } from '../app/slices/LoginSlice';
 import { jwtTokenValidation,} from "../app/slices/userValidateSlice.js";
-import { getAllCategoriesApi } from "../app/slices/categoriesSlice.js";
+import { getCategoriesFullListApi } from "../app/slices/categoriesSlice.js";
 import {
   getAllTodosApi,
   deleteTodoApi,
@@ -23,8 +23,11 @@ const CompletedTodos = () => {
   const completeTodo = useSelector((state) => state.todoReducer.completeTodo);
   const deleteTodo = useSelector((state) => state.todoReducer.deleteTodo);
   const getCategories = useSelector(
-    (state) => state.categoriesReducer.getCategories
+    (state) => state.categoriesReducer.getCategoriesFullList
   );
+  // const getCategories = useSelector(
+  //   (state) => state.categoriesReducer.getCategories
+  // );
   const selectedOption = useSelector(
     (state) => state.todoReducer.selectedOption
   );
@@ -54,7 +57,8 @@ const CompletedTodos = () => {
       dispatch(resetToken());
       navigate("/login");
     } else {
-      dispatch(getAllCategoriesApi({token, pageCount}));
+      dispatch(getCategoriesFullListApi({token}));
+      // dispatch(getAllCategoriesApi({token, pageCount}));
       dispatch(getAllTodosApi({token, todoPageCount}));
     }
   }, [todoResponse, completeTodo, deleteTodo,selectedOption,pageCount,selectedOption,searchTodo,todoPageCount]);
@@ -160,7 +164,7 @@ const CompletedTodos = () => {
             ref={selectedOptionRef}
             required
           >
-            {getCategories?.data?.getCategory?.map((item) =>
+            {getCategories?.data?.totalCategories?.map((item) =>
               item.is_deleted != true ? (
                 <option value={item?.category_name} key={item._id}>
                   {item?.category_name}
@@ -169,11 +173,11 @@ const CompletedTodos = () => {
             )}
           </select>
         </div>
-        <div className='flex justify-center items-center gap-3 my-4'>
+        {/* <div className='flex justify-center items-center gap-3 my-4'>
                     <button className='bg-slate-800 min-w-fit px-3 rounded-md text-white font-medium text-xl hover:bg-slate-900 py-2' onClick={handlePrev}>Prev</button>
                     <p className='text-white text-xl font-medium'>{pageCount} of {getCategories?.data?.nbPages}</p>
                     <button className='bg-slate-800 min-w-fit px-3 rounded-md text-white font-medium text-xl hover:bg-slate-900 py-2' onClick={handleNext}>Next</button>
-        </div>
+        </div> */}
         <hr />
         <div className='flex justify-center items-center gap-3 my-12'>
                     <button className='bg-slate-800 min-w-fit px-3 rounded-md text-white font-medium text-xl hover:bg-slate-900 py-2' onClick={handleTodoPrev}>Prev</button>

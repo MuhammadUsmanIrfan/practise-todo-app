@@ -47,6 +47,10 @@ export const NavBarSlice = createSlice({
     },
     setShowEdit: (state , action) => {
       state.showEdit = !state.showEdit
+      if(action.payload == false)
+      {
+        state.showEdit = false
+      }
     },
   },
 })

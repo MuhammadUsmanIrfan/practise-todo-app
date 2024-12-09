@@ -33,7 +33,6 @@ export const signin = createAsyncThunk("signin", async(fromdata)=>{
      method: 'POST',
      headers: {
        'Content-Type': 'application/json',
-      //  'Authorization': `Bearer ${fromdata.token}`, 
      },
      body:JSON.stringify(fromdata)
    })
@@ -97,7 +96,7 @@ export const loginSlice = createSlice({
         state.checkGooleAuth  = false
         state.checkGooleAuthLogin = true
      }
-
+   
    });
     builder.addCase(signin.rejected, (state, action)=>{
      state.userLoginResponse = action.payload
@@ -109,9 +108,6 @@ export const loginSlice = createSlice({
     setCheckGooleAuthLogin: (state, action) => {
       state.checkGooleAuthLogin = action.payload
     },
-    // setCheckGooleAuth: (state, action) => {
-    //   state.checkGooleAuth = action.payload
-    // },
     setIsEmailPasswordWrong: (state, action) => {
       state.isEmailPasswordWrong = action.payload
     },
@@ -120,18 +116,22 @@ export const loginSlice = createSlice({
     },
     setPassword: (state, action) => {
       state.password = action.payload
-    },  setGoogleAuth: (state, action) => {
-      state.checkGooleAuth = action.payload
-    },
+    },  
     resetToken:  (state, action) => {
-      // console.log("resset token runs, state.token=>",state.token)
       state.token  = "",
       state.userLoginResponse = {};
       localStorage.removeItem("auth_token");
     },
+    setGoogleLoginToken:  (state, action) => {
+      state.token  = action.payload,
+      localStorage.setItem("auth_token",action.payload);
+    },
+    setCheckGooleAuth:  (state, action) => {
+      state.checkGooleAuth  = action.payload
+    },
   },
 })
 
-export const { setCheckGooleAuthLogin,setCheckGooleAuth,setIsEmailPasswordWrong,setEmail,setPassword,resetToken,setGoogleAuth } = loginSlice.actions
+export const { setCheckGooleAuthLogin,setCheckGooleAuth,setIsEmailPasswordWrong,setEmail,setPassword,resetToken,setGoogleLoginToken } = loginSlice.actions
 
 export default loginSlice.reducer
